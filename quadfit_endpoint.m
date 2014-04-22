@@ -31,7 +31,7 @@ yy = a*(x.*x)+b*x+c;
 err = yy-y;
 errsum = abs(sum(err))
 errstd = std(err)
-rmserr = sqrt(mean(err.*err));
+rmserr = sqrt(mean(err.*err))
 
 if nargin>=3 
     yy =  a*(xx.*xx)+b*xx+c;

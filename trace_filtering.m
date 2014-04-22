@@ -30,53 +30,68 @@ if 0
 end
 
 %% start filtering
+KR_DIR
 
 if length(t_ary)~=length(z_ary)
     error ('time series length mismatch');
 end
-pret = 0;
-prex = z_ary(:,1);
-clear s
-s.P = zeros(2);
-post_x_ary = zeros(2,length(t_ary));
-post_x_ary(:,1) = prex;
-for i=2:length(t_ary)-1
+n = length(t_ary);
+if KR_DIR~=-1
+    pret = t_ary(1);
+    prex = z_ary(:,1);
+    i_list = 2:n;
+    clear s
+    s.P = zeros(2);
+    post_x_ary = zeros(2,n);
+    post_x_ary(:,1) = prex;
+    post_x_var = zeros(2,n);
+else
+    pret = t_ary(end);
+    prex = z_ary(:,end);    
+    i_list = n-1: -1: 1;
+    s = repmat(struct('P',zeros(2)), 1, n );
+    post_x_ary = zeros(2,n);
+    post_x_ary(:,end) = prex;
+    post_x_var = zeros(2,n);
+end
+for i=i_list
     t=t_ary(i);
     z=z_ary(:,i);
     dt = t-pret; 
     %  Vq = interp3(V,Xq,Yq,Zq) assumes a default grid of sample points. 
     %  The default grid points cover the region, X=1:n, Y=1:m, Z=1:p, where [m,n,p] = size(V). 
     % note : as z is useless here, the 3rd dimension is time
-%     interp_v=zeros(2,1);
-%     interp_v(1) = interp3(squeeze(vecAll_fit(1,:,:,:,:)),   prex(2)+1, prex(1)+1, pret+1)*dt;
-%     interp_v(2) = interp3(squeeze(vecAll_fit(2,:,:,:,:)),   prex(2)+1, prex(1)+1, pret+1)*dt;
-    %interp_v(3) = interp3(squeeze(vecAll_fit(3,:,:,:,:)),   prex(2)+1, prex(1)+1, pret+1)*dt;
-    stderr_v = zeros(2,1);
-    stderr_v(1) = interp2(squeeze(err_fitted(1,:,:,:)), prex(2)+1, prex(1)+1)*dt;
-    stderr_v(2) = interp2(squeeze(err_fitted(2,:,:,:)), prex(2)+1, prex(1)+1)*dt;
-    %stderr_v(3) = interp2(squeeze(err_fitted(3,:,:,:)), prex(2)+1, prex(1)+1)*dt;
+    
+    [rk4_y, rk4_var] = runge_kutta4_gauss(vecAll_fit, prex, pret, dt, var_fitted);  %interp_v;
+%     if (KR_DIR==1 && i==2 || KR_DIR==-1 && i==n-1)
+%         rk4_var=[0;0];
+%     end
         
     % build kalmanf input
-    s(i-1).x = prex;
-    s(i-1).A = eye(2);
-%     if i==2
-%         s(i-1).Q = zeros(2);
-%     else
-        s(i-1).Q = diag(stderr_v); % variance of fitted flow field
-%     end
-    s(i-1).H = eye(2);
-    s(i-1).R = diag(z_stderr(:,i)); % variance of fitted trace
-    s(i-1).B = eye(2);
-    s(i-1).u = runge_kutta4(vecAll_fit, prex, pret, dt)-prex-1;  %interp_v;
-    s(i-1).z = z_ary(:,i);
+    s(i-KR_DIR).x = prex;
+    s(i-KR_DIR).A = eye(2);
+    s(i-KR_DIR).Q = diag(rk4_var); % variance of fitted flow field
+    s(i-KR_DIR).H = eye(2);
+    s(i-KR_DIR).R = diag(z_var(:,i)); % variance of fitted trace
+    s(i-KR_DIR).B = eye(2);
+    s(i-KR_DIR).u = rk4_y-prex;  %interp_v;
+    s(i-KR_DIR).z = z_ary(:,i);
         
-    s(i)=kalmanf(s(i-1));
+    s(i)=kalmanf(s(i-KR_DIR));
     
     prex = s(i).x;
     post_x_ary(:,i) = s(i).x;
+    post_x_var(:,i) = [s(i).Q(1,1); s(i).Q(2,2)];
     pret = t;
 end
-post_x_ary(:,length(t_ary)) = z_ary(:,length(t_ary)); % last element
+if KR_DIR~=-1
+%     post_x_ary(:,end) = z_ary(:,end); % last element
+%     post_x_var(:,end) = zeros(2,1);
+else
+%     post_x_ary(:,1) = z_ary(:,1); % last element
+%     post_x_var(:,1) = zeros(2,1);
+%     s(1).Q = zeros(2);
+end
 
 % comput hausdorff
 % haus_fitted     = HausdorffDist(true_x_ary(1:2,:), z_ary);
@@ -93,22 +108,32 @@ legend('true xy', sprintf('interpolated xy, mean err=%f', meanerr_fitted), ...
     sprintf('traced from fitted field, mean err=%f', meanerr_traced));
 xlabel('x')
 ylabel('y')
+disp('press key..')
 pause
+
 hold on
 post_x_stderr=zeros(size(post_x_ary));
-for i=1:length(t_ary)-1
+if KR_DIR~=-1
+    i_list = 1:n-1;
+else
+    i_list = 2:n;
+end
+for i=i_list
     si=s(i);
-    post_x_stderr(1,i)=si.P(1,1);
-    post_x_stderr(2,i)=si.P(2,2);
-    post_x_stderr
+%     post_x_stderr
+    if det(si.Q) > 0
+        error_ellipse(si.Q, si.x, 'style', 'k');
+    end
     if det(si.P) > 0
-        error_ellipse(si.P*3, si.x, 'style', 'r');
+        error_ellipse(si.P, si.x, 'style', 'r');
     end
     if det(si.R) > 0
-        error_ellipse(si.R*3, si.z, 'style', 'g');
+        error_ellipse(si.R, si.z, 'style', 'g');
     end
     quiver(s(i).x(1), s(i).x(2), s(i).u(1), s(i).u(2), 'color', 'k');
 end
 hold off
+disp('press key...')
+pause
 
     
