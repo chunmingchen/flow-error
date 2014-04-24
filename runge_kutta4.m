@@ -15,6 +15,6 @@ function y = f(vecAll, x, t)
     if isnan(y(1))
         disp('Runge Kutta: nan')
     end
-%     disp(sprintf('vec(%.8f %.8f %.8f)=(%f %f)', x(1), x(2), t, y(1), y(2)))
+    disp(sprintf('vec(%.8f %.8f %.8f)=(%f %f)', x(1), x(2), t, y(1), y(2)))
 end
 

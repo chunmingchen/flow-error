@@ -3,7 +3,7 @@ fitted_list_file = '/data/flow/isabel_all/2d/fitted_quad_endpoint24/all24.list';
 stderr_file = '/data/flow/isabel_all/2d/fitted_quad_endpoint24/sampling24_00_stderr.raw';
 global data_w data_d data_t data_h 
 
-auto =1
+auto =0
 % pathline_loader
 % output: trace_list
 
@@ -32,7 +32,7 @@ if 0
 end
 
 data_t = 25; % 9
-DT = data_t/20;
+DT = min(0.5, data_t/20);
     
 traced_err_list = [];
 filtered_err_list = [];
@@ -44,7 +44,7 @@ fig=figure;
 
 for trace = trace_list
     true_raw_ary = trace{1};
-%     true_raw_ary = trace_list{47}; % 27
+    true_raw_ary = trace_list{27}; % 27
 
     if true_raw_ary(4,end) < data_t-1.1
         continue;
@@ -123,9 +123,31 @@ elseif 1
         fw_post_x_ary = fw_post_x_ary(1:2,:);
         bw_post_x_ary = bw_post_x_ary(1:2,length(bw_post_x_ary):-1:1);  % reverse order
         bw_post_x_var = bw_post_x_var(:, length(bw_post_x_ary):-1:1); % reverse order
+        
+        if 1
+            n= length(bw_post_x_ary);
+            z_ary = bw_post_x_ary(n:-1:1);
+            z_var = bw_post_x_var(:,n:-1:1);
+            KR_DIR = 1;
+            trace_filtering
+            kf_fw_post_x_ary = post_x_ary;
+            kf_fw_post_x_var = post_x_var;
+            
+            n = length(fw_post_x_ary);
+            z_ary = fw_post_x_ary(n:-1:1);
+            z_var = fw_post_x_var(:,n:-1:1);
+            KR_DIR = -1;
+            trace_filtering
+            bw_post_x_ary = post_x_ary;
+            bw_post_x_var = post_x_var;
+            
+            fw_post_x_ary = kf_fw_post_x_ary;
+            fw_post_x_var = kf_fw_post_x_var;
+            
+        end
     end
         
-    % analyze
+    % merge
     merged_sum_var = fw_post_x_var+ bw_post_x_var;
     merged_x_ary = (bw_post_x_var.*fw_post_x_ary + fw_post_x_var.*bw_post_x_ary) ./ merged_sum_var;
     merged_x_ary(:,1) = fw_post_x_ary(:,1);
@@ -134,7 +156,7 @@ elseif 1
     merged_x_var(:,1) = [0;0];
     merged_x_var(:,end) = [0;0];
     
-    
+    % statistics
     meanerr_fitted     = mean(sqrt(sum( (true_x_ary(1:2,:)- z_ary).^2 )))
     meanerr_filtered   = mean(sqrt(sum( (true_x_ary(1:2,:)- merged_x_ary).^2)))
     meanerr_traced     = mean(sqrt(sum( (true_x_ary(1:2,:)- traced_fitted_x_ary(1:2,:) ).^2)))
@@ -157,11 +179,11 @@ elseif 1
     end
 
     hold on
-    for i=1:length(post_x_ary)
+    for i=1:length(merged_x_var)
         tmp = diag(merged_x_var(:,i));
         tmpx = merged_x_ary(:,i);
         if det(tmp) > 0
-            error_ellipse(tmp, tmpx, 'style', 'k');
+            error_ellipse(tmp, tmpx, 'style', 'm');
         end
         tmp = diag(fw_post_x_var(:,i));
         tmpx = fw_post_x_ary(:,i);
@@ -194,15 +216,16 @@ elseif 1
         
     end
     
-    traced_err_list(end+1) = meanerr_traced;
-    filtered_err_list(end+1) = meanerr_filtered;
-    quad_fit_err_list(end+1) = meanerr_fitted;
-    linear_fit_err_list(end+1) = meanerr_linear_fit;
     if auto==1
-        saveas(fig, sprintf('trace_x%d_y%d.jpg', true_x_ary(1,1), true_x_ary(2,1)));
-        disp('saved')
+        traced_err_list(end+1) = meanerr_traced;
+        filtered_err_list(end+1) = meanerr_filtered;
+        quad_fit_err_list(end+1) = meanerr_fitted;
+        linear_fit_err_list(end+1) = meanerr_linear_fit;
+        if auto==1
+            saveas(fig, sprintf('trace_x%d_y%d.jpg', true_x_ary(1,1), true_x_ary(2,1)));
+            disp('saved')
+        end
     end
-
 else
     n = length(z_ary);
     s = repmat(struct('P',zeros(2)), 1, n );

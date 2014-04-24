@@ -5,8 +5,17 @@ project (insitu_error)
 
 set(lib_dir "${CMAKE_SOURCE_DIR}/../lib" CACHE PATH "path to all libs")
 set(osuflow_dir "${CMAKE_SOURCE_DIR}/osuflow"   CACHE PATH "path to osuflow library")
+option(warnings_on "Show Warnings" OFF)
+
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -Wno-unused-result")
+
+if (${warnings_on})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
+endif()
+
 
 
 # defaults for cmake_build_type
