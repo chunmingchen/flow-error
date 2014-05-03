@@ -517,7 +517,7 @@ void fitQuadBezier(vector<vector<VECTOR3> > &flowfieldAry, int start, int sampli
 					float y1=y_ary[0][d];
 					float yn=y_ary[n-1][d];
 					// t: x,  u: 1-x
-					float sum_t1u1y=0, sum_t1u3=0, sum_t3u1=0, sum_t2u2;
+					double sum_t1u1y=0, sum_t1u3=0, sum_t3u1=0, sum_t2u2=0;
 					//println("y=");
 					for (int t=0; t<n; t++)
 					{
@@ -533,7 +533,7 @@ void fitQuadBezier(vector<vector<VECTOR3> > &flowfieldAry, int start, int sampli
 					float ctrl = (sum_t1u1y  * (n-1) * (n-1) - sum_t1u3 * y1 - sum_t3u1 * yn) / 2.f / sum_t2u2 ;
 					quadBezierAry[id][d] = ctrl;
 
-					//println("ctrl=%f", ctrl);
+					//println("ctrl=%f,   t1u1y=%lf, t1u3=%lf, t2u2=%lf, t3u1=%lf", ctrl, sum_t1u1y, sum_t1u3, sum_t2u2, sum_t3u1);
 
 					//printf("d=%d, asserting...%f\n", d, abs(par[0][d]*(n-1)*(n-1)+par[1][d]*(n-1)+par[2][d]-yn));
 					//assert(abs(par[0][d]*(n-1)*(n-1)+par[1][d]*(n-1)+par[2][d]-y_ary[n-1][d])<1e-5);
@@ -576,6 +576,7 @@ void fitQuadBezier(vector<vector<VECTOR3> > &flowfieldAry, int start, int sampli
 			}
 }
 
+
 void saveFittedFlowfields(vector<vector<VECTOR3> >& funcAry, int start, int sampling, const char *folder)
 {
 	println("Saving fitted flow fields...");
@@ -606,6 +607,7 @@ void saveFittedFlowfields(vector<vector<VECTOR3> >& funcAry, int start, int samp
 		fclose(fp);
 	}
 #endif
+
 	// save quad bezier control point
 	fp = fopen(strprintf("%s/sampling%d_%02d_bctrl.raw", folder, sampling, start).c_str(), "wb");
 	fwrite(&quadBezierAry[0], 4, w*h*d*3, fp);
@@ -623,6 +625,8 @@ void saveFittedFlowfields(vector<vector<VECTOR3> >& funcAry, int start, int samp
 	fp = fopen(strprintf("%s/sampling%d_%02d_meanerr.raw", folder, sampling, start).c_str(), "wb");
 	fwrite(&meanErrAry[0], 4, w*h*d*3, fp);
 	fclose(fp);
+#endif
+#if 0
 	// save a
 	fp = fopen(strprintf("%s/sampling%d_%02d_a.raw", folder, sampling, start).c_str(), "wb");
 	for (int id=0; id<w*h*d; id++)
@@ -675,7 +679,19 @@ void run(int sampling) {
 		//saveFittedFlowfields(quadFuncAry, i, sampling, out_path.c_str());
 
 		fitQuadBezier(flowfieldAry, i, sampling);
+		if (i==0) {
+			std::string cmd = strprintf("cp %s %s/sampling%d_%02d.vec", fileAry[i].c_str(), out_path.c_str(), sampling, i);
+			println("%s", cmd.c_str());
+			system(cmd.c_str());
+		}
+		{
+			std::string cmd = strprintf("cp %s %s/sampling%d_%02d.vec", fileAry[i+sampling].c_str(), out_path.c_str(), sampling, i+sampling);
+			println("%s", cmd.c_str());
+			system(cmd.c_str());
+		}
 		saveFittedFlowfields(quadFuncAry, i, sampling, out_path.c_str());
+
+
 	}
 
 }

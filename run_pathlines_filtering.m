@@ -8,7 +8,7 @@ auto =0
 % output: trace_list
 
 % get fields
-if 0
+if 1
     fitted_list = load_list(fitted_list_file);
     true_list = load_list(true_list_file);
     

@@ -1,6 +1,6 @@
 % output: trace_list in cell. each cell size: 4 x traces
 
-filename='/data/flow/isabel_all/2d/pathlines.out'
+filename='/data/flow/isabel_all/2d/pathlines_seeds.out'
 
 fin = fopen(filename, 'rb')
 bmin = fread(fin, [4,1], 'float32')
