@@ -1,10 +1,16 @@
 cmake_minimum_required (VERSION 2.8)
 project (insitu_error)
 
+
+FIND_PACKAGE(VTK REQUIRED)
+include(${VTK_USE_FILE})
+add_definitions(-DVTK)
+
 # settings
 
 set(lib_dir "${CMAKE_SOURCE_DIR}/../lib" CACHE PATH "path to all libs")
 set(osuflow_dir "${CMAKE_SOURCE_DIR}/osuflow"   CACHE PATH "path to osuflow library")
+set(flowvis_dir "${CMAKE_SOURCE_DIR}/../flowvis" CACHE PATH "path to flowvis project")
 option(warnings_on "Show Warnings" OFF)
 
 
@@ -42,6 +48,7 @@ INCLUDE_DIRECTORIES(
     ${osuflow_dir}/include/renderer
     ${osuflow_dir}/include/renderer/gcb
     ${lib_dir}/jclib
+    ${flowvis_dir}/common
     )
 
 LINK_DIRECTORIES( 
@@ -65,3 +72,6 @@ SET(libJCLib    optimized jclib     debug jclibd)
 
 add_executable(flow_error flow_error.cpp)
 TARGET_LINK_LIBRARIES(flow_error  ${libOSUFlow} ${libJCLib} m)
+
+add_executable(merge_error merge_error.cpp)
+TARGET_LINK_LIBRARIES(merge_error ${libOSUFlow} ${libJCLib} m ${VTK_LIBRARIES})
