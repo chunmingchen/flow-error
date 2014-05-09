@@ -35,11 +35,20 @@ int main(int argc, char **argv)
 
     for ( auto ptrace_fw : pathline_fw.traceList )
     {
+        // out
+        jcListTimeSeedTrace *outTrace = new jcListTimeSeedTrace;
+        outTrace->varList = new list<VECTOR3 *> ;
+
         auto ptrace_bw = *itr_trace_bw;
 
         int n = ptrace_fw->size();
         assert( n == ptrace_fw->varList->size() );
-        assert( n == ptrace_bw->size() );
+        if ( n != ptrace_bw->size() ) {
+            // fw and bw finishes differently
+            outTraceList.push_back(outTrace);
+            ++itr_trace_bw;
+            continue;
+        }
         assert( n == ptrace_bw->varList->size() );
 
         auto itr_point_fw = ptrace_fw->begin();
@@ -47,9 +56,6 @@ int main(int argc, char **argv)
         auto itr_var_fw = ptrace_fw->varList->begin();
         auto itr_var_bw = ptrace_bw->varList->begin();
 
-        // out
-        jcListTimeSeedTrace *outTrace = new jcListTimeSeedTrace;
-        outTrace->varList = new list<VECTOR3 *> ;
 
 
         while( itr_point_fw != ptrace_fw->end() && itr_point_bw != ptrace_bw->end() )
@@ -75,10 +81,12 @@ int main(int argc, char **argv)
                 exit(1);
             }
 
+#ifdef _DEBUG
             printf(" p1:"); print_array(&p1[0], 4);
             printf(" v1:"); print_array(&v1[0], 3);
             printf(" p2:"); print_array(&p2[0], 4);
             printf(" v2:"); print_array(&v2[0], 3);
+#endif
             VECTOR4 outp(0,0,0,p1[3]);
             VECTOR3 outv;
             for (int d=0; d<3; d++)
@@ -86,8 +94,10 @@ int main(int argc, char **argv)
                 outv[d] = v1[d]*v2[d]/ (v1[d]+v2[d]);
                 outp[d] = (p1[d]*v2[d] + p2[d]*v1[d]) / (v1[d]+v2[d]);  //outp[d] = outv[d] * (p1[d]/(double)v1[d] + p2[d]/(double)v2[d]);
             }
+#ifdef _DEBUG
             printf(" outp':"); print_array(&outp[0], 3);
             printf(" outv':"); print_array(&outv[0], 3);
+#endif
 
             //VECTOR3 vsum = v1+v2;
             //double p1p2_vsum = v1[0]*v2[0]/vsum[0] + v1[1]*v2[1]/vsum[1] + v1[2]*v2[2]/vsum[2]  ;

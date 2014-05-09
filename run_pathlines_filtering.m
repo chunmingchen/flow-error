@@ -9,8 +9,8 @@ auto =0
 
 % get fields
 if 1
+    [true_list, data_w, data_h, data_d, data_t, scaling] = load_list(true_list_file);
     fitted_list = load_list(fitted_list_file);
-    true_list = load_list(true_list_file);
     
     vecAll_fit  = zeros(3, data_w, data_h, 1, data_t);
     vecAll      = zeros(3, data_w, data_h, 1, data_t);

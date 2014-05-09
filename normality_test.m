@@ -5,8 +5,8 @@ pValue_list = [];
 mean_list = [];
 ratio_list = [];
 for d=1:2
-    for x=1:10:500
-        for y=1:10:500
+    for x=1:10:data_w
+        for y=1:10:data_h
             err1 = squeeze(err(d,x,y,1,:));
 %             err1 = interp1q((1:length(err1))', err1, (1:.1:length(err1))');
             if 0
@@ -18,7 +18,7 @@ for d=1:2
             else
                 pd = makedist('Normal', 'sigma', sqrt(mean(err1.^2)));
 %                 pd = fitdist(err1, 'Normal');
-                if 0
+                if 1
                     [H, pValue] = kstest(err1, 'CDF', pd);    
                 elseif 0
                     [H, pValue] = adtest(err1, 'CDF', pd);

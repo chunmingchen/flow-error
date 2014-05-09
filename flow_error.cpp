@@ -14,8 +14,8 @@ using namespace std;
 using namespace JCLib;
 
 vector<string> fileAry;
-int w, h, d, t;
-#define POS_ID(x,y,z) ((x)+w*((y)+h*(z)));
+int W, H, D, T;
+#define POS_ID(x,y,z) ((x)+W*((y)+H*(z)));
 bool saveErrHist=false;
 
 //#define DEBUG_CONVEX
@@ -93,13 +93,13 @@ void load_list(string list_filename) {
 	FILE *fp = fopen(list_filename.c_str(), "rt");
 	char str[1024];
 	fgets(str, 1024, fp);
-	i = sscanf(str, "%d %d %d %d", &w, &h, &d, &t);
+    i = sscanf(str, "%d %d %d %d", &W, &H, &D, &T);
 	assert(i==4);
 	fgets(str, 1024, fp); // dummy line
 
 
 	fileAry.clear();
-	for (i = 0; i < t; i++) {
+    for (i = 0; i < T; i++) {
 		fgets(str, 1024, fp);
 		char *p = strtok(str, " \r\n");
 		//printf("%s\n", p);
@@ -114,11 +114,11 @@ void load_list(string list_filename) {
 void computeMaxError(vector<vector<VECTOR3> > &flowfieldAry, int start, int sampling)
 {
 	println ("Compute Max Error");
-	vector<float> maxErrField(w * h * d);
+    vector<float> maxErrField(W * H * D);
 	int x, y, z, i;
-	for (z = 0; z < d; z++)
-		for (y = 0; y < h; y++)
-			for (x = 0; x < w; x++) {
+    for (z = 0; z < D; z++)
+        for (y = 0; y < H; y++)
+            for (x = 0; x < W; x++) {
 				int id = POS_ID(x,y,z);
 				VECTOR3 dist = flowfieldAry[sampling][id]
 						- flowfieldAry[0][id];
@@ -139,11 +139,11 @@ void computeMaxError(vector<vector<VECTOR3> > &flowfieldAry, int start, int samp
 	fname = strprintf("maxErrField%d-%d", sampling, start).c_str();
 	FILE *fp = fopen( ("err/"+fname+".raw").c_str(), "wb");
 	assert(fp);
-	fwrite(&maxErrField[0], sizeof(float), w * h * d, fp);
+    fwrite(&maxErrField[0], sizeof(float), W*H*D,  fp);
 	fclose(fp);
 
 	string nrrd_fname;
-	write_nrrd_3d( ("err/"+fname+".nhdr").c_str(), (fname+".raw").c_str(), w, h, d, "float");
+    write_nrrd_3d( ("err/"+fname+".nhdr").c_str(), (fname+".raw").c_str(), W, H, D, "float");
 	println("Done");
 }
 
@@ -151,12 +151,12 @@ void computeMaxError(vector<vector<VECTOR3> > &flowfieldAry, int start, int samp
 void computeMaxAngleMagError(vector<vector<VECTOR3> > &flowfieldAry, int start, int sampling)
 {
 	println ("Compute Max angle/mag Error");
-	vector<float> maxMagErrField(w * h * d);
-	vector<float> maxAngErrField(w * h * d);
+    vector<float> maxMagErrField(W * H * D);
+    vector<float> maxAngErrField(W * H*  D);
 	int x, y, z, i;
-	for (z = 0; z < d; z++)
-		for (y = 0; y < h; y++)
-			for (x = 0; x < w; x++) {
+    for (z = 0; z < D; z++)
+        for (y = 0; y < H; y++)
+            for (x = 0; x < W; x++) {
 				int id = POS_ID(x,y,z);
 				VECTOR3 dist = flowfieldAry[sampling][id]
 						- flowfieldAry[0][id];
@@ -186,20 +186,20 @@ void computeMaxAngleMagError(vector<vector<VECTOR3> > &flowfieldAry, int start, 
 	fname = strprintf("maxMagErrField%d-%d", sampling, start).c_str();
 	FILE *fp = fopen( ("err/"+fname+".raw").c_str(), "wb");
 	assert(fp);
-	fwrite(&maxMagErrField[0], sizeof(float), w * h * d, fp);
+    fwrite(&maxMagErrField[0], sizeof(float), W*H*D, fp);
 	fclose(fp);
 
-	write_nrrd_3d( ("err/"+fname+".nhdr").c_str(), (fname+".raw").c_str(), w, h, d, "float");
+    write_nrrd_3d( ("err/"+fname+".nhdr").c_str(), (fname+".raw").c_str(), W, H, D, "float");
 
 
 	fname = strprintf("maxAngErrField%d-%d", sampling, start).c_str();
 	fp = fopen( ("err/"+fname+".raw").c_str(), "wb");
 	assert(fp);
-	fwrite(&maxAngErrField[0], sizeof(float), w * h * d, fp);
+    fwrite(&maxAngErrField[0], sizeof(float), W*H*D, fp);
 	fclose(fp);
 
 	string nrrd_fname;
-	write_nrrd_3d( ("err/"+fname+".nhdr").c_str(), (fname+".raw").c_str(), w, h, d, "float");
+    write_nrrd_3d( ("err/"+fname+".nhdr").c_str(), (fname+".raw").c_str(), W, H, D, "float");
 	println("Done");
 
 }
@@ -207,15 +207,15 @@ void computeMaxAngleMagError(vector<vector<VECTOR3> > &flowfieldAry, int start, 
 void genConvex4Error(vector<vector<VECTOR3> > &flowfieldAry, int start, int sampling)
 {
 	println ("Compute convex4 Error");
-	vector<float> errProximateRatioField(w*h*d);
+    vector<float> errProximateRatioField(W*H*D);
 	int x, y, z, i, dim;
 	//d=2; //!!!!!!!!!!
-	for (z = 0; z < d; z++)
+    for (z = 0; z < D; z++)
 	{
 		if (y%10==0)
 			println("z=%d", z);
-		for (y = 0; y < h; y++)
-			for (x = 0; x < w; x++)
+        for (y = 0; y < H; y++)
+            for (x = 0; x < W; x++)
 			{
 				int id = POS_ID(x,y,z);
 				// interp
@@ -330,10 +330,10 @@ void genConvex4Error(vector<vector<VECTOR3> > &flowfieldAry, int start, int samp
 	fname = strprintf("meanProximateRatio%d-%d", sampling, start).c_str();
 	FILE *fp = fopen( ("err/"+fname+".raw").c_str(), "wb");
 	assert(fp);
-	fwrite(&errProximateRatioField[0], sizeof(float), w * h * d, fp);
+    fwrite(&errProximateRatioField[0], sizeof(float), W*H*D, fp);
 	fclose(fp);
 
-	write_nrrd_3d( ("err/"+fname+".nhdr").c_str(), (fname+".raw").c_str(), w, h, d, "float");
+    write_nrrd_3d( ("err/"+fname+".nhdr").c_str(), (fname+".raw").c_str(), W, H, D, "float");
 
 }
 
@@ -347,17 +347,17 @@ vector<vector<VECTOR3> > errAry;  // std error;  xyz, dim
 void fitQuadFuncEndPoints(vector<vector<VECTOR3> > &flowfieldAry, int start, int sampling)
 {
 	int n=sampling+1;
-	quadFuncAry = vector<vector<VECTOR3> > (w*h*d, vector<VECTOR3>(3));
-	stdErrAry =  vector<VECTOR3> (w*h*d);
-	rmsErrAry =  vector<VECTOR3> (w*h*d);
-	errAry = vector<vector<VECTOR3> >(w*h*d, vector<VECTOR3>(n));
-	meanErrAry = vector<VECTOR3> (w*h*d);
+    quadFuncAry = vector<vector<VECTOR3> > (W*H*D, vector<VECTOR3>(3));
+    stdErrAry =  vector<VECTOR3> (W*H*D);
+    rmsErrAry =  vector<VECTOR3> (W*H*D);
+    errAry = vector<vector<VECTOR3> >(W*H*D, vector<VECTOR3>(n));
+    meanErrAry = vector<VECTOR3> (W*H*D);
 
 	println ("Fitting quadratic function");
 	int x, y, z, i;
-	for (z = 0; z < d; z++)
-		for (y = 0; y < h; y++)
-			for (x = 0; x < w; x++)
+    for (z = 0; z < D; z++)
+        for (y = 0; y < H; y++)
+            for (x = 0; x < W; x++)
 			{
 				int id = POS_ID(x,y,z);
 				vector<VECTOR3> y_ary(n);
@@ -436,15 +436,15 @@ void fitQuadFuncEndPoints(vector<vector<VECTOR3> > &flowfieldAry, int start, int
 void fitQuadFunc(vector<vector<VECTOR3> > &flowfieldAry, int start, int sampling)
 {
 	int n=sampling+1;
-	quadFuncAry = vector<vector<VECTOR3> > (w*h*d, vector<VECTOR3>(3));
-	stdErrAry =  vector<VECTOR3>  (w*h*d);
-	rmsErrAry = vector<VECTOR3> (w*h*d);
+    quadFuncAry = vector<vector<VECTOR3> > (W*H*D, vector<VECTOR3>(3));
+    stdErrAry =  vector<VECTOR3>  (W*H*D);
+    rmsErrAry = vector<VECTOR3> (W*H*D);
 
 	println ("Fitting quadratic function");
 	int x, y, z, i;
-	for (z = 0; z < d; z++)
-		for (y = 0; y < h; y++)
-			for (x = 0; x < w; x++)
+    for (z = 0; z < D; z++)
+        for (y = 0; y < H; y++)
+            for (x = 0; x < W; x++)
 			{
 				int id = POS_ID(x,y,z);
 				vector<VECTOR3> y_ary(n);
@@ -492,25 +492,33 @@ void fitQuadFunc(vector<vector<VECTOR3> > &flowfieldAry, int start, int sampling
 
 // fitting with quad bezier
 vector<VECTOR3> quadBezierAry;
-void fitQuadBezier(vector<vector<VECTOR3> > &flowfieldAry, int start, int sampling)
+
+// flowfieldAry: one layer of the original vector data
+// z: the z of the layer
+// start: file id
+void fitQuadBezier(vector<vector<VECTOR3> > &flowfieldAry, int z, int sampling)
 {
 	int n=sampling+1;
-	quadBezierAry = vector<VECTOR3> (w*h*d);
-	stdErrAry =  vector<VECTOR3> (w*h*d);
-	rmsErrAry =  vector<VECTOR3> (w*h*d);
-	errAry = vector<vector<VECTOR3> >(w*h*d, vector<VECTOR3>(n));
-	meanErrAry = vector<VECTOR3> (w*h*d);
+    if (z==0) {
+        quadBezierAry = vector<VECTOR3> (W*H*D);
+        stdErrAry =  vector<VECTOR3> (W*H*D);
+        rmsErrAry =  vector<VECTOR3> (W*H*D);
+        //errAry = vector<vector<VECTOR3> >(w*h*d, vector<VECTOR3>(n));
+        meanErrAry = vector<VECTOR3> (W*H*D);
+    }
 
 	println ("Fitting quadratic function");
-	int x, y, z, i;
-	for (z = 0; z < d; z++)
-		for (y = 0; y < h; y++)
-			for (x = 0; x < w; x++)
+    int x, y, i;
+    //for (z = 0; z < d; z++)
+        for (y = 0; y < H; y++)
+            for (x = 0; x < W; x++)
 			{
-				int id = POS_ID(x,y,z);
+                int id_in = POS_ID(x,y,0);
+                int id_out = POS_ID(x,y,z);
+
 				vector<VECTOR3> y_ary(n);
 				for (i=0; i<n; i++)
-					y_ary[i] = flowfieldAry[i][id];
+                    y_ary[i] = flowfieldAry[i][id_in];
 
 				for (int d=0; d<3; d++) //dim
 				{
@@ -531,7 +539,7 @@ void fitQuadBezier(vector<vector<VECTOR3> > &flowfieldAry, int start, int sampli
 						//println("%f", y_ary[t][d]);
 					}
 					float ctrl = (sum_t1u1y  * (n-1) * (n-1) - sum_t1u3 * y1 - sum_t3u1 * yn) / 2.f / sum_t2u2 ;
-					quadBezierAry[id][d] = ctrl;
+                    quadBezierAry[id_out][d] = ctrl;
 
 					//println("ctrl=%f,   t1u1y=%lf, t1u3=%lf, t2u2=%lf, t3u1=%lf", ctrl, sum_t1u1y, sum_t1u3, sum_t2u2, sum_t3u1);
 
@@ -554,14 +562,14 @@ void fitQuadBezier(vector<vector<VECTOR3> > &flowfieldAry, int start, int sampli
 					double mean = JCLib::getMean(err_ary.begin(), err_ary.end());
 					double std = JCLib::getDeviation(err_ary.begin(), err_ary.end());
 					double rms = sqrt(JCLib::getMean(err_ary2.begin(), err_ary2.end()));
-					stdErrAry[id][d] = std;
-					rmsErrAry[id][d] = rms;
-					meanErrAry[id][d] = mean;
+                    stdErrAry[id_out][d] = std;
+                    rmsErrAry[id_out][d] = rms;
+                    meanErrAry[id_out][d] = mean;
 					//println("std=%lf mean=%lf rms=%f", std, mean, rms);
 
 					// errAry
-					for (i=0; i<n; i++)
-						errAry[id][i][d]=err_ary[i];
+                    //for (i=0; i<n; i++)
+                    //	errAry[id_out][i][d]=err_ary[i];
 
 				}
 
@@ -601,7 +609,7 @@ void saveFittedFlowfields(vector<vector<VECTOR3> >& funcAry, int start, int samp
 		{
 			int dim[3];
 			dim[0] = w; dim[1] = h; dim[2] = d;
-			fwrite(dim, 4, 3, fp);
+            fwrite(dim, 4, 3, fdp);
 		}
 		fwrite(&flowfield[0], 4, w*h*d*3, fp);
 		fclose(fp);
@@ -610,20 +618,20 @@ void saveFittedFlowfields(vector<vector<VECTOR3> >& funcAry, int start, int samp
 
 	// save quad bezier control point
 	fp = fopen(strprintf("%s/sampling%d_%02d_bctrl.raw", folder, sampling, start).c_str(), "wb");
-	fwrite(&quadBezierAry[0], 4, w*h*d*3, fp);
+    fwrite(&quadBezierAry[0], 4, W*H*D*3, fp);
 	fclose(fp);
 #if 1
 	// save rms err
 	fp = fopen(strprintf("%s/sampling%d_%02d_rmserr.raw", folder, sampling, start).c_str(), "wb");
-	fwrite(&rmsErrAry[0], 4, w*h*d*3, fp);
+    fwrite(&rmsErrAry[0], 4, W*H*D*3, fp);
 	fclose(fp);
 	// save errstd
 	fp = fopen(strprintf("%s/sampling%d_%02d_stderr.raw", folder, sampling, start).c_str(), "wb");
-	fwrite(&stdErrAry[0], 4, w*h*d*3, fp);
+    fwrite(&stdErrAry[0], 4, W*H*D*3, fp);
 	fclose(fp);
 	// save err mean
 	fp = fopen(strprintf("%s/sampling%d_%02d_meanerr.raw", folder, sampling, start).c_str(), "wb");
-	fwrite(&meanErrAry[0], 4, w*h*d*3, fp);
+    fwrite(&meanErrAry[0], 4, W*H*D*3, fp);
 	fclose(fp);
 #endif
 #if 0
@@ -643,57 +651,70 @@ void saveFittedFlowfields(vector<vector<VECTOR3> >& funcAry, int start, int samp
 }
 
 void run(int sampling) {
-	int i, j;
+    int i, j, z;
 	println("allocating size=%d", sampling);
-	vector<vector<VECTOR3> > flowfieldAry(sampling+1, vector<VECTOR3>(w * h * d));
+    vector<vector<VECTOR3> > flowfieldAry(sampling+1, vector<VECTOR3>(W * H * 1));
 	string out_path = GET_ARG_STRING("out_path").c_str();
 
-	for (i = 0; i < t; i += sampling) {
-		for (j = 0; j <= sampling; j++) {
-			int id = i + j;
-			if (id >= t)
-				return;
+    for (i = 0; i < T; i += sampling)
+    {
+        vector<FILE *> fp_ary;
+        for (j=0; j <= sampling; j++)
+        {
+            int id = i + j;
+            if (id >= T)
+                return;
 
-			println("Loading %s", fileAry[id].c_str());
-			FILE *fp = fopen(fileAry[id].c_str(), "rb");
-			if (!fp) {
-				perror("load flow field");
-				exit(1);
-			}
-			int dum[3];
-			fread(dum, 4, 3, fp);
-			fread(&flowfieldAry[j][0], sizeof(VECTOR3), w * h * d, fp);
-			fclose(fp);
+            println("Opening %s", fileAry[id].c_str());
+            FILE *fp = fopen(fileAry[id].c_str(), "rb");
+            if (!fp) {
+                perror("load flow field");
+                exit(1);
+            }
+            fseek(fp, 12, SEEK_SET);
+            fp_ary.push_back(fp);
+        }
 
-			//print_array(&flowfieldAry[j][0][0], 3);
-		}
+        for (z = 0; z < D; z++ )
+        {
+            println("Reading files for z=%d", z);
+            for (j = 0; j <= sampling; j++) {
+                //println("Reading %s for z=%d", fileAry[id].c_str(), z);
+                fread(&flowfieldAry[j][0], sizeof(VECTOR3), W * H * 1, fp_ary[j]);
+                //print_array(&flowfieldAry[j][0][0], 3);
+            }
 
-		//computeMaxError(flowfieldAry, i, sampling);
-		//computeMaxAngleMagError(flowfieldAry, i, sampling);
-		//genConvex4Error(flowfieldAry, i, sampling);
+            //computeMaxError(flowfieldAry, i, sampling);
+            //computeMaxAngleMagError(flowfieldAry, i, sampling);
+            //genConvex4Error(flowfieldAry, i, sampling);
 
-		//fitQuadFunc(flowfieldAry, i, sampling);
-		//saveFittedFlowfields(quadFuncAry, i, sampling, "fitted_quad");
+            //fitQuadFunc(flowfieldAry, i, sampling);
+            //saveFittedFlowfields(quadFuncAry, i, sampling, "fitted_quad");
 
-		//fitQuadFuncEndPoints(flowfieldAry, i, sampling);
-		//saveFittedFlowfields(quadFuncAry, i, sampling, out_path.c_str());
+            //fitQuadFuncEndPoints(flowfieldAry, i, sampling);
+            //saveFittedFlowfields(quadFuncAry, i, sampling, out_path.c_str());
 
-		fitQuadBezier(flowfieldAry, i, sampling);
-		if (i==0) {
-			std::string cmd = strprintf("cp %s %s/sampling%d_%02d.vec", fileAry[i].c_str(), out_path.c_str(), sampling, i);
-			println("%s", cmd.c_str());
-			system(cmd.c_str());
-		}
-		{
-			std::string cmd = strprintf("cp %s %s/sampling%d_%02d.vec", fileAry[i+sampling].c_str(), out_path.c_str(), sampling, i+sampling);
-			println("%s", cmd.c_str());
-			system(cmd.c_str());
-		}
-		saveFittedFlowfields(quadFuncAry, i, sampling, out_path.c_str());
+            fitQuadBezier(flowfieldAry, z, sampling);
 
 
-	}
+        }
+        for (j = 0; j <= sampling ; j++) {
+            fclose(fp_ary[j]);
+        }
 
+        if (i==0) {
+            std::string cmd = strprintf("cp %s %s/sampling%d_%02d.vec", fileAry[i].c_str(), out_path.c_str(), sampling, i);
+            println("%s", cmd.c_str());
+            system(cmd.c_str());
+        }
+        {
+            std::string cmd = strprintf("cp %s %s/sampling%d_%02d.vec", fileAry[i+sampling].c_str(), out_path.c_str(), sampling, i+sampling);
+            println("%s", cmd.c_str());
+            system(cmd.c_str());
+        }
+        saveFittedFlowfields(quadFuncAry, i, sampling, out_path.c_str());
+
+    }
 }
 
 int main(int argc, const char **argv) {

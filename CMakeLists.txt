@@ -28,7 +28,7 @@ endif()
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "DEBUG;RELEASE")
 
 # settings for large data
-add_definitions(-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE=1)
+add_definitions(-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE=1) # large data
 
 # platform settings
 IF (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -75,3 +75,7 @@ TARGET_LINK_LIBRARIES(flow_error  ${libOSUFlow} ${libJCLib} m)
 
 add_executable(merge_error merge_error.cpp)
 TARGET_LINK_LIBRARIES(merge_error ${libOSUFlow} ${libJCLib} m ${VTK_LIBRARIES})
+
+add_executable(cmp_pathline cmp_pathline.cpp)
+TARGET_LINK_LIBRARIES(cmp_pathline ${libOSUFlow} ${libJCLib} m ${VTK_LIBRARIES})
+
