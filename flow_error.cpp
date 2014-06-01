@@ -2,6 +2,7 @@
 #include <vector>
 #include <assert.h>
 #include <stdio.h>
+#include <cstdio>
 #include <string>
 #include <string.h>
 #include "OSUFlow.h"
@@ -410,7 +411,7 @@ void fitQuadFuncEndPoints(vector<vector<VECTOR3> > &flowfieldAry, int start, int
 					}
 					double mean = JCLib::getMean(err_ary.begin(), err_ary.end());
 					double std = JCLib::getDeviation(err_ary.begin(), err_ary.end());
-					double rms = sqrt(JCLib::getMean(err_ary2.begin(), err_ary2.end()));
+                    double rms = sqrt(JCLib::getSum(err_ary2.begin(), err_ary2.end())/(n-1));
 					stdErrAry[id][d] = std;
 					rmsErrAry[id][d] = rms;
 					meanErrAry[id][d] = mean;
@@ -561,7 +562,7 @@ void fitQuadBezier(vector<vector<VECTOR3> > &flowfieldAry, int z, int sampling)
 					}
 					double mean = JCLib::getMean(err_ary.begin(), err_ary.end());
 					double std = JCLib::getDeviation(err_ary.begin(), err_ary.end());
-					double rms = sqrt(JCLib::getMean(err_ary2.begin(), err_ary2.end()));
+                    double rms = sqrt(JCLib::getSum(err_ary2.begin(), err_ary2.end())/(n-1));
                     stdErrAry[id_out][d] = std;
                     rmsErrAry[id_out][d] = rms;
                     meanErrAry[id_out][d] = mean;
@@ -656,14 +657,18 @@ void run(int sampling) {
     vector<vector<VECTOR3> > flowfieldAry(sampling+1, vector<VECTOR3>(W * H * 1));
 	string out_path = GET_ARG_STRING("out_path").c_str();
 
+    int count = 0;
+#if 1
     for (i = 0; i < T; i += sampling)
     {
         vector<FILE *> fp_ary;
+        if (i+sampling >= T)
+            break;
         for (j=0; j <= sampling; j++)
         {
             int id = i + j;
             if (id >= T)
-                return;
+                break;
 
             println("Opening %s", fileAry[id].c_str());
             FILE *fp = fopen(fileAry[id].c_str(), "rb");
@@ -714,7 +719,30 @@ void run(int sampling) {
         }
         saveFittedFlowfields(quadFuncAry, i, sampling, out_path.c_str());
 
+        count ++;
     }
+#else
+    for (i = 0; i < T; i += sampling)
+    {
+        count ++;
+    }
+
+#endif
+
+    FILE *fp = fopen(strprintf("%s/all_bezier_rms.list", out_path.c_str()).c_str(), "w");
+    fprintf(fp, "%d %d %d %d\n", W, H, D, count);
+    fprintf(fp, "%lg\n", 1.f/(double)sampling);
+    for (i=0; i< count ; i++)
+    {
+        int i1 = i-1;
+        if (i==count-1)
+            fprintf(fp, "sampling%d_%02d.vec sampling%d_%02d_bctrl.raw sampling%d_%02d_rmserr.raw\n",
+                sampling, sampling*i, sampling, sampling*i1, sampling, sampling*i1);
+        else
+            fprintf(fp, "sampling%d_%02d.vec sampling%d_%02d_bctrl.raw sampling%d_%02d_rmserr.raw\n",
+                sampling, sampling*i, sampling, sampling*i, sampling, sampling*i);
+    }
+    fclose(fp);
 }
 
 int main(int argc, const char **argv) {
