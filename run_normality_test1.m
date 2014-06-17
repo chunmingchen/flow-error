@@ -1,7 +1,7 @@
 
 % isabel
-TEST = 1
-SAMPLING=47;
+TEST = 3.1
+SAMPLING=400;
 TUPLES=3; % default
 switch TEST
     case 0
@@ -39,6 +39,17 @@ switch TEST
     case 3
         label = 'smhagos'
         base_path = '/data/flow2/smhagos/curvilinear';
+        true_list_file = sprintf('%s/all.list', base_path);
+        
+        [files, W, H, D, T, scaling] = load_list(true_list_file);
+        SEEDING_STEP=25; % 5184 * 3 = 15552 seeds
+        seeds_x = floor(SEEDING_STEP/2):SEEDING_STEP:W;
+        seeds_y = floor(SEEDING_STEP/2):SEEDING_STEP:H;
+        SEEDING_STEP=12; % 5184 * 3 = 15552 seeds
+        seeds_z = floor(SEEDING_STEP/2):SEEDING_STEP:D;
+    case 3.1
+        label = 'smhagos'
+        base_path = '/data/smhagos/franklin/curvelinear';
         true_list_file = sprintf('%s/all.list', base_path);
         
         [files, W, H, D, T, scaling] = load_list(true_list_file);
@@ -148,6 +159,7 @@ if 1
     end
 % %     err_linear = vecAll_linear - vecAll;
 % %     err_linear2 = vecAll_linear2 - vecAll;
+    % this computation may be wrong:
     err_rms_linear = sqrt(mean(mean(mean(mean(mean((vecAll_linear - vecAll).^2))))))
     err_rms_linear2 = sqrt(mean(mean(mean(mean(mean((vecAll_linear2 - vecAll).^2))))))
     err_rms_bezier = sqrt(mean(mean(mean(mean(mean((vecAll_bezier - vecAll).^2))))))
@@ -175,15 +187,15 @@ if 1
 %     
     disp('Running fit test')
     
-    [ks_bezier, chi_bezier, conf_ratio_bezier, pfield] = normality_test1(vecAll_bezier - vecAll)   ; 
+    [ks_bezier, chi_bezier, conf_ratio_bezier, pfield_bezier] = normality_test1(vecAll_bezier - vecAll)   ; 
     [ks_bezier, chi_bezier, conf_ratio_bezier]
-    [ks_bezier3, chi_bezier3, conf_ratio_bezier3] = normality_test1(vecAll_bezier3 - vecAll)   ; 
-    [ks_bezier4, chi_bezier4, conf_ratio_bezier4] = normality_test1(vecAll_bezier4 - vecAll)   ; 
+    [ks_bezier3, chi_bezier3, conf_ratio_bezier3, pfield_bezier3] = normality_test1(vecAll_bezier3 - vecAll)   ; 
+    [ks_bezier4, chi_bezier4, conf_ratio_bezier4, pfield_bezier4] = normality_test1(vecAll_bezier4 - vecAll)   ; 
     %dump_scalar(squeeze(pfield(1,:,:,:,:)) , sprintf('%s_%d/kstest_field.raw', label, SAMPLING));
     [ks_linear, chi_linear] = normality_test1(vecAll_linear - vecAll)
     [ks_linear2, chi_linear2] = normality_test1(vecAll_linear2 - vecAll)
-    [ks_fitn1, chi_fitn1, conf_ratio_fitn1] = normality_test1(vecAll_fitn1 - vecAll)
-    [ks_fitn2, chi_fitn2, conf_ratio_fitn2] = normality_test1(vecAll_fitn2 - vecAll)
+    [ks_fitn1, chi_fitn1, conf_ratio_fitn1, pfield_fitn1] = normality_test1(vecAll_fitn1 - vecAll)
+    [ks_fitn2, chi_fitn2, conf_ratio_fitn2, pfield_fitn2] = normality_test1(vecAll_fitn2 - vecAll)
 end
 err_rms = [err_rms_linear; err_rms_linear2; err_rms_bezier; err_rms_bezier3; err_rms_bezier4; err_rms_fitn1; err_rms_fitn2]
 err_mean = [err_mean_linear; err_mean_linear2; err_mean_bezier; err_mean_bezier3; err_mean_bezier4; err_mean_fitn1; err_mean_fitn2]
