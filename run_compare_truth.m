@@ -1,6 +1,6 @@
 setenv('PATH', '/home/chenchu/Project/flowvis/tools:/home/chenchu/Project/flowvis/4D/tools:/home/chenchu/bin:/usr/lib/lightdm/lightdm:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games')
 
-skipping = 50;
+skipping = 12;
 test = 31;
 RUN_TRACING = 1;
 switch test

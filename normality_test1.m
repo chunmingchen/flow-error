@@ -1,4 +1,4 @@
-function [fit_ratio_ks, fit_ratio_chi, conf_95_ratio] = normality_test1(err)
+function [fit_ratio_ks, fit_ratio_chi, conf_95_ratio, pfield] = normality_test1(err)
 
 % normality test
 % intput: err = vecAll - vecAll_fit
@@ -10,16 +10,18 @@ pValue_list2 = [];
 div = size(err,5)-1;
 conf_95_list = [];
 
+pfield = 2*ones(size(err,1), size(err,2), size(err,3), size(err,4));
+
 for z=1:size(err,4)
     for y=1:size(err,3)
         for d=1:size(err,1)
             for x=1:size(err,2)
-                err1 = squeeze(err(d,x,y,1,:));
-                s = sqrt(sum(err1.^2)/div);
+                err1 = squeeze(err(d,x,y,z,:));
+                s = sqrt(sum(err1.^2)/div); % standard error
                 
-                conf_95_list(end+1) = mean(err1 < s*1.96);
-                continue %!!!!
-                
+                %conf_95_list(end+1) = mean(err1 < s*1.96); %!!!!!!! paper submit
+                conf_95_list(end+1) = mean(abs(err1) < s*1.96);
+               
                 if s<1e-3
 %                     H_list1(end+1) = 0;                    
                     continue
@@ -39,6 +41,7 @@ for z=1:size(err,4)
                     H_list2(end+1) = H2;
                     pValue_list2(end+1) = pValue2;
                 end
+                pfield(d,x,y,z) = pValue1;
             end
         end
     end
