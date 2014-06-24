@@ -19,7 +19,9 @@ switch (test)
         err = vecAll_fitn1 - vecAll;
         rmserr =  squeeze(sqrt(mean(err.^2, 5)));
         pfield = pfield1
-        
+
+        pfield1 = pfield(1,:,:,:);
+        rmserr1 = rmserr(1,:,:,:);
 end
 
 s=size(rmserr);
