@@ -121,8 +121,9 @@ if 1
     vecAll_bezier = zeros(TUPLES, sample_w, sample_h, sample_d, sample_t);
     vecAll_bezier3 = zeros(TUPLES, sample_w, sample_h, sample_d, sample_t); % cubic
     vecAll_bezier4 = zeros(TUPLES, sample_w, sample_h, sample_d, sample_t); % quartic
+    vecAll_bezier5 = zeros(TUPLES, sample_w, sample_h, sample_d, sample_t); % quintic
     vecAll_fitn1 = zeros(TUPLES, sample_w, sample_h, sample_d, sample_t);
-    vecAll_fitn2 = zeros(TUPLES, sample_w, sample_h, sample_d, sample_t);
+    vecAll_fitn2 = zeros(TUPLES, sample_w, sample_h, sample_d, sample_t);    
     t_linear  = [1 sample_t];
     t_linear2  = [1 ceil(sample_t/2) sample_t];
     t_ary = 1:sample_t;
@@ -140,8 +141,9 @@ if 1
                     vecAll_bezier(i,x,y,z,:) = bezierfit1((t_ary-1), v(i,:), (t_ary-1))   ;
                     vecAll_bezier3(i,x,y,z,:) = bezierfitcubic(t_ary, v(i,:), t_ary);
                     vecAll_bezier4(i,x,y,z,:) = bezierfitquartic(t_ary, v(i,:), t_ary);
+                    vecAll_bezier5(i,x,y,z,:) = bezierfitQuintic(t_ary, v(i,:), t_ary);
                     p = polyfit(t_ary, v(i,:), 1); vecAll_fitn1(i,x,y,z,:) = polyval(p, t_ary);
-                    p = polyfit(t_ary, v(i,:), 2); vecAll_fitn2(i,x,y,z,:) = polyval(p, t_ary);
+                    p = polyfit(t_ary, v(i,:), 2); vecAll_fitn2(i,x,y,z,:) = polyval(p, t_ary);                    
                 end    
             end
         end
@@ -153,6 +155,7 @@ if 1
     err_rms_bezier = sqrt(mean(mean(mean(mean(mean((vecAll_bezier - vecAll).^2))))))
     err_rms_bezier3 = sqrt(mean(mean(mean(mean(mean((vecAll_bezier3 - vecAll).^2))))))
     err_rms_bezier4 = sqrt(mean(mean(mean(mean(mean((vecAll_bezier4 - vecAll).^2))))))
+    err_rms_bezier5 = sqrt(mean(mean(mean(mean(mean((vecAll_bezier5 - vecAll).^2))))))
     err_rms_fitn1 = sqrt(mean(mean(mean(mean(mean((vecAll_fitn1 - vecAll).^2))))))
     err_rms_fitn2 = sqrt(mean(mean(mean(mean(mean((vecAll_fitn2 - vecAll).^2))))))
         
@@ -161,6 +164,7 @@ if 1
     err_mean_bezier = mean(mean(mean(mean(mean(mean(vecAll_bezier - vecAll))))))
     err_mean_bezier3 = mean(mean(mean(mean(mean(mean(vecAll_bezier3 - vecAll))))))
     err_mean_bezier4 = mean(mean(mean(mean(mean(mean(vecAll_bezier4 - vecAll))))))
+    err_mean_bezier5 = mean(mean(mean(mean(mean(mean(vecAll_bezier5 - vecAll))))))
     err_mean_fitn1 = mean(mean(mean(mean(mean(mean(vecAll_fitn1 - vecAll))))))
     err_mean_fitn2 = mean(mean(mean(mean(mean(mean(vecAll_fitn2 - vecAll))))))
     
