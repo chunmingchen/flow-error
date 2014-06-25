@@ -192,12 +192,12 @@ if 1
     disp('Running fit test')
     
     [ks_bezier, chi_bezier, conf_ratio_bezier, pfield_bezier] = normality_test1(vecAll_bezier - vecAll)   ; 
-    [ks_bezier, chi_bezier, conf_ratio_bezier]
-    [ks_bezier3, chi_bezier3, conf_ratio_bezier3, pfield_bezier3] = normality_test1(vecAll_bezier3 - vecAll)   ; 
-    [ks_bezier4, chi_bezier4, conf_ratio_bezier4, pfield_bezier4] = normality_test1(vecAll_bezier4 - vecAll)   ; 
+%     [ks_bezier, chi_bezier, conf_ratio_bezier]
+%     [ks_bezier3, chi_bezier3, conf_ratio_bezier3, pfield_bezier3] = normality_test1(vecAll_bezier3 - vecAll)   ; 
+%     [ks_bezier4, chi_bezier4, conf_ratio_bezier4, pfield_bezier4] = normality_test1(vecAll_bezier4 - vecAll)   ; 
     %dump_scalar(squeeze(pfield(1,:,:,:,:)) , sprintf('%s_%d/kstest_field.raw', label, SAMPLING));
-    [ks_linear, chi_linear] = normality_test1(vecAll_linear - vecAll)
-    [ks_linear2, chi_linear2] = normality_test1(vecAll_linear2 - vecAll)
+%     [ks_linear, chi_linear] = normality_test1(vecAll_linear - vecAll)
+%     [ks_linear2, chi_linear2] = normality_test1(vecAll_linear2 - vecAll)
     [ks_fitn1, chi_fitn1, conf_ratio_fitn1, pfield_fitn1] = normality_test1(vecAll_fitn1 - vecAll)
     [ks_fitn2, chi_fitn2, conf_ratio_fitn2, pfield_fitn2] = normality_test1(vecAll_fitn2 - vecAll)
 end
