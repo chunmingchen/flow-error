@@ -1,7 +1,7 @@
 
 % isabel
-TEST = 101
-SAMPLING=47;
+TEST = 7
+SAMPLING=100;
 TUPLES=3; % default
 switch TEST
     case 0
@@ -21,8 +21,8 @@ switch TEST
         true_list_file = sprintf('%s/all.list', base_path);
 
         [files, W, H, D, T, scaling] = load_list(true_list_file);
-        %SEEDING_STEP=16; % 20 3125 * 2 = 9375 seeds %<< paper
-        SEEDING_STEP=5; % 20 3125 * 2 = 9375 seeds
+        SEEDING_STEP=16; % 20 3125 * 2 = 9375 seeds %<< paper
+%         SEEDING_STEP=5; % 20 3125 * 2 = 9375 seeds
         seeds_x = floor(SEEDING_STEP/2):SEEDING_STEP:W;
         seeds_y = floor(SEEDING_STEP/2):SEEDING_STEP:H;
         seeds_z = floor(SEEDING_STEP/2):SEEDING_STEP:D;
@@ -68,6 +68,27 @@ switch TEST
         seeds_x = floor(SEEDING_STEP/2):SEEDING_STEP:W;
         seeds_y = floor(SEEDING_STEP/2):SEEDING_STEP:H;
         seeds_z = floor(SEEDING_STEP/2):SEEDING_STEP:D;
+    case 6
+        label = 'eddy'
+        base_path = '/data/flow/eddy';
+        true_list_file = sprintf('%s/all.list', base_path);
+        
+        [files, W, H, D, T, scaling] = load_list(true_list_file);
+        SEEDING_STEP=10; % 4096 seeds
+        seeds_x = ceil(SEEDING_STEP/2):SEEDING_STEP:W;
+        seeds_y = 1;
+        seeds_z = 1;
+    case 7
+        label = 'turbine'
+        base_path = '/data/flow2/turbine_Stg/zDIR.P3D.rel.6201-11001/block0/'
+        true_list_file = sprintf('%s/all.list', base_path);
+        
+        [files, W, H, D, T, scaling] = load_list(true_list_file);
+        SEEDING_STEP=100;
+        seeds_x = ceil(SEEDING_STEP/2):SEEDING_STEP:W;
+        seeds_y = 1;
+        seeds_z = 1;
+        
     
         %%%%%%%%%%%%%% scalar
     case 101
@@ -139,7 +160,7 @@ if 1
     end
 % %     err_linear = vecAll_linear - vecAll;
 % %     err_linear2 = vecAll_linear2 - vecAll;
-    if TEST==1 || TEST==3 || TEST==4 
+    if TEST==1 || TEST==3 || TEST==4 || TEST==6
         vecAll = vecAll(1:2, :,:,:,:);
         vecAll_linear = vecAll_linear(1:2, :,:,:,:);
         vecAll_linear2 = vecAll_linear2(1:2, :,:,:,:);
@@ -170,7 +191,7 @@ if 1
     
     [ks_bezier, chi_bezier, conf_ratio, pfield] = normality_test1(vecAll_bezier - vecAll)   ; 
     [ks_bezier, chi_bezier, conf_ratio]
-    dump_scalar(squeeze(pfield(1,:,:,:,:)) , sprintf('%s_%d/kstest_field.raw', label, SAMPLING));
+    %dump_scalar(squeeze(pfield(1,:,:,:,:)) , sprintf('%s_%d/kstest_field.raw', label, SAMPLING));
     [ks_linear2, chi_linear2] = normality_test1(vecAll_linear2 - vecAll)
     [ks_linear, chi_linear] = normality_test1(vecAll_linear - vecAll)
 end

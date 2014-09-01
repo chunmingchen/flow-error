@@ -44,9 +44,9 @@ ENDIF()
 
 # directories
 INCLUDE_DIRECTORIES( 
-    ${osuflow_dir}/include       # for make install
-    ${osuflow_dir}/include/renderer
-    ${osuflow_dir}/include/renderer/gcb
+    ${osuflow_dir}/include/osuflow       # for make install
+    ${osuflow_dir}/include/osuflow/renderer
+    ${osuflow_dir}/include/osuflow/renderer/gcb
     ${lib_dir}/jclib
     ${flowvis_dir}/common
     )
@@ -56,16 +56,26 @@ LINK_DIRECTORIES(
     ${osuflow_dir}/src        
     ${CMAKE_SOURCE_DIR}/osuflow/renderer
     ${CMAKE_SOURCE_DIR}/osuflow/renderer/libgcb
-    ${osuflow_dir}/lib # for make install
-    ${osuflow_dir}/lib/renderer
-    ${osuflow_dir}/lib/renderer/gcb
+    ${osuflow_dir}/lib/osuflow # for make install
+    ${osuflow_dir}/lib/osuflow/renderer
+    ${osuflow_dir}/lib/osuflow/renderer/gcb
     ${lib_dir}
     )
 
-SET(libOSUFlow  optimized OSUFlow_r     debug OSUFlow_d)
+SET(libOSUFlow  optimized OSUFlow     debug OSUFlow_d)
 SET(libJCLib    optimized jclib     debug jclibd)
 
 # profiling
+
+# openmap
+FIND_PACKAGE( OpenMP REQUIRED)
+if(OPENMP_FOUND)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+else()
+message("OPENMP NOT FOUND")
+endif()
 
 ##################################
 
@@ -73,8 +83,8 @@ SET(libJCLib    optimized jclib     debug jclibd)
 add_executable(flow_error flow_error.cpp)
 TARGET_LINK_LIBRARIES(flow_error  ${libOSUFlow} ${libJCLib} m)
 
-add_executable(merge_error merge_error.cpp)
-TARGET_LINK_LIBRARIES(merge_error ${libOSUFlow} ${libJCLib} m ${VTK_LIBRARIES})
+#add_executable(merge_error merge_error.cpp)
+#TARGET_LINK_LIBRARIES(merge_error ${libOSUFlow} ${libJCLib} m ${VTK_LIBRARIES})
 
 #add_executable(cmp_pathline cmp_pathline.cpp)
 #TARGET_LINK_LIBRARIES(cmp_pathline ${libOSUFlow} ${libJCLib} m ${VTK_LIBRARIES})

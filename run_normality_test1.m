@@ -1,7 +1,7 @@
 
 % isabel
-TEST = 3.1
-SAMPLING=400;
+TEST = 7
+SAMPLING=99;
 TUPLES=3; % default
 switch TEST
     case 0
@@ -78,6 +78,26 @@ switch TEST
         seeds_x = floor(SEEDING_STEP/2):SEEDING_STEP:W;
         seeds_y = floor(SEEDING_STEP/2):SEEDING_STEP:H;
         seeds_z = floor(SEEDING_STEP/2):SEEDING_STEP:D;
+    case 6
+        label = 'eddy'
+        base_path = '/data/flow/eddy';
+        true_list_file = sprintf('%s/all.list', base_path);
+        
+        [files, W, H, D, T, scaling] = load_list(true_list_file);
+        SEEDING_STEP=10; % 4096 seeds
+        seeds_x = ceil(SEEDING_STEP/2):SEEDING_STEP:W;
+        seeds_y = 1;
+        seeds_z = 1;
+    case 7
+        label = 'turbine'
+        base_path = '/data/flow2/turbine_Stg/zDIR.P3D.rel.6201-11001/block0/'
+        true_list_file = sprintf('%s/all.list', base_path);
+        
+        [files, W, H, D, T, scaling] = load_list(true_list_file);
+        SEEDING_STEP=100;
+        seeds_x = ceil(SEEDING_STEP/2):SEEDING_STEP:W;
+        seeds_y = 1;
+        seeds_z = 1;
     
         %%%%%%%%%%%%%% scalar
     case 101
@@ -119,7 +139,7 @@ if 1
 end
 
 % These datasets behave more like 2D
-if TEST==1 || TEST==3 || TEST==4
+if TEST==1 || TEST==3 || TEST==4 || TEST==6
     TUPLES=2 
     vecAll = vecAll(1:2, :,:,:,:);
 end
@@ -193,11 +213,11 @@ if 1
     
     [ks_bezier, chi_bezier, conf_ratio_bezier, pfield_bezier] = normality_test1(vecAll_bezier - vecAll)   ; 
 %     [ks_bezier, chi_bezier, conf_ratio_bezier]
-%     [ks_bezier3, chi_bezier3, conf_ratio_bezier3, pfield_bezier3] = normality_test1(vecAll_bezier3 - vecAll)   ; 
-%     [ks_bezier4, chi_bezier4, conf_ratio_bezier4, pfield_bezier4] = normality_test1(vecAll_bezier4 - vecAll)   ; 
+    [ks_bezier3, chi_bezier3, conf_ratio_bezier3, pfield_bezier3] = normality_test1(vecAll_bezier3 - vecAll)   ; 
+    [ks_bezier4, chi_bezier4, conf_ratio_bezier4, pfield_bezier4] = normality_test1(vecAll_bezier4 - vecAll)   ; 
     %dump_scalar(squeeze(pfield(1,:,:,:,:)) , sprintf('%s_%d/kstest_field.raw', label, SAMPLING));
-%     [ks_linear, chi_linear] = normality_test1(vecAll_linear - vecAll)
-%     [ks_linear2, chi_linear2] = normality_test1(vecAll_linear2 - vecAll)
+    [ks_linear, chi_linear] = normality_test1(vecAll_linear - vecAll)
+    [ks_linear2, chi_linear2] = normality_test1(vecAll_linear2 - vecAll)
     [ks_fitn1, chi_fitn1, conf_ratio_fitn1, pfield_fitn1] = normality_test1(vecAll_fitn1 - vecAll)
     [ks_fitn2, chi_fitn2, conf_ratio_fitn2, pfield_fitn2] = normality_test1(vecAll_fitn2 - vecAll)
 end

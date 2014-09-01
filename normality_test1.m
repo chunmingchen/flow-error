@@ -30,6 +30,7 @@ for z=1:size(err,4)
                 pd = makedist('Normal', 'mu', 0, 'sigma', s);
                 [H1, pValue1] = kstest(err1, 'CDF', pd);    
                 [H2, pValue2] = chi2gof(err1, 'CDF', pd);
+%                 [H2, pValue2] = chi2gof(err1);
 
                 if ~isnan(pValue1)
 
@@ -42,6 +43,11 @@ for z=1:size(err,4)
                     pValue_list2(end+1) = pValue2;
                 end
                 pfield(d,x,y,z) = pValue1;
+                
+%                 hist(err1);
+%                 title(sprintf('chitest pvalue=%f, h=%f.  kstest pvalue=%f, h=%f', pValue2, H2, pValue1, H1))
+%                 pause
+                
             end
         end
     end

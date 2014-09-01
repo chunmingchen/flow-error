@@ -16,7 +16,7 @@ yvalues = {   [0.5256	0.6264	0.308	0.3736	0.1088	0.1648
 };
 legends = {{'Linear Interpolation', 'Linear Interp. w/ Double Sampling', 'Quadratic Bezier Spline'}};
 xlabels = {'Test Method and Sampling Interval'};
-ylabels = {'Acceptance Rate (%)'};
+ylabels = {'Rejection Rate (%)'};
 titles = {'Isabel', 'Plume', 'Climate'};
 base_path = '~/Dropbox/0osuflow/Paper/LDAV14/fig/matlab';
 
@@ -31,10 +31,11 @@ for i=1:length(xvalues)
     colormap(jet_inv)
     
     yvalues{i} = abs(yvalues{i});
-    bar(yvalues{i}'*100);
+    bar(100-yvalues{i}'*100);
     if i==1
-%         h = legend(legends{1}, 'Location', 'SouthWest');
-%         set(h, 'FontSize', 12.0);
+        h = legend(legends{1}, 'Location', 'NorthWest');
+        set(h, 'FontSize', 12.0);
+          set(h,'box','off') 
     end
     set(gca, 'FontSize', 36.0);
     h = xlabel({' ';' '; xlabels{1}})
