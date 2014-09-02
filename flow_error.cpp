@@ -668,7 +668,8 @@ public:
         this->rmsErrAry = vector<T>(size);
 
 
-        string out_path = GET_ARG_STRING("out_path").c_str();
+
+        string out_path = GET_ARG_STRING("out_path", "");
         int count = 0;
         int sample_base = 0;
     #if 1
@@ -737,21 +738,23 @@ public:
 
     #endif
 
-        FILE *fp = fopen(strprintf("%s/all_bezier_rms.list", out_path.c_str()).c_str(), "w");
-        fprintf(fp, "%d %d %d %d\n", W, H, D, count);
-        fprintf(fp, "%lg\n", 1.f/(double)sampling);
-        for (i=0; i< count ; i++)
-        {
-            fprintf(fp, "sampling%d_%02d.vec sampling%d_%02d_bctrl.raw sampling%d_%02d_rmserr.raw\n",
-                sampling, sampling*i, sampling, sampling*i, sampling, sampling*i);
-
-            int i1 = i+1;
-            if (i==count-1)
+        if (!out_path.empty()) {
+            FILE *fp = fopen(strprintf("%s/all_bezier_rms.list", out_path.c_str()).c_str(), "w");
+            fprintf(fp, "%d %d %d %d\n", W, H, D, count);
+            fprintf(fp, "%lg\n", 1.f/(double)sampling);
+            for (i=0; i< count ; i++)
+            {
                 fprintf(fp, "sampling%d_%02d.vec sampling%d_%02d_bctrl.raw sampling%d_%02d_rmserr.raw\n",
-                    sampling, sampling*i1, sampling, sampling*i, sampling, sampling*i);
+                    sampling, sampling*i, sampling, sampling*i, sampling, sampling*i);
 
+                int i1 = i+1;
+                if (i==count-1)
+                    fprintf(fp, "sampling%d_%02d.vec sampling%d_%02d_bctrl.raw sampling%d_%02d_rmserr.raw\n",
+                        sampling, sampling*i1, sampling, sampling*i, sampling, sampling*i);
+
+            }
+            fclose(fp);
         }
-        fclose(fp);
     }
 
     void test_online() {
