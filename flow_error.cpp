@@ -594,18 +594,22 @@ public:
     void fitOnlineQuadBezier(vector<T> &ctrlAry, vector<T> &stderrAry, OnlineCache &online, int sampling)
     {
         int n=sampling+1;
-        double sum_t1u1y=0, sum_t1u3=0, sum_t3u1=0, sum_t2u2=0;
+        float sum_t1u1y=0, sum_t1u3=0, sum_t3u1=0, sum_t2u2=0;
+        float sum_u4=0, sum_t4=0;
 
         int i;
         // t: x,  u: 1-x
         for (i=0; i<=sampling; i++) {
-            double t = (double)i/sampling;
-            double u = 1-t;
-            double u2 = u*u;
-            double t2 = t*t;
+            float t = (float)i/sampling;
+            float u = 1-t;
+            float u2 = u*u;
+            float t2 = t*t;
             sum_t1u3 	+= t*u*u2;
             sum_t2u2	+= t2*u2;
             sum_t3u1	+= t*t2*u;
+            sum_u4      += u2*u2;
+            sum_t4      += t2*t2;
+
         }
 
         Timer timer;
@@ -622,13 +626,18 @@ public:
 
             // sum est y
             T sum_est_y2; // assume initialized
+#if 0
             for (int j=0; j<=sampling; j++)
             {
-                double t = (double)j/sampling;
-                double u = 1-t;
+                float t = (float)j/sampling;
+                float u = 1-t;
                 T est_y = p0*(u*u) + ctrl*( u*t*2. ) + p2*(t*t);
                 sum_est_y2 += mult(est_y, est_y);
             }
+#else
+            sum_est_y2 = mult(p0,p0)*sum_u4 + mult(ctrl, ctrl)*(4.*sum_t2u2) + mult(p2, p2)*sum_t4 +
+                    mult(p0, ctrl)*(4.*sum_t1u3) + mult(p0, p2)*(2.*sum_t2u2) + mult(ctrl, p2)*(4.*sum_t3u1);
+#endif
 
             T t1 = mult(p0, online.ysum[i]);
             T t2 =  mult((ctrl-p0), online.ytsum[i])*2.f;
@@ -695,7 +704,8 @@ public:
                 if (i>0) {
                     fitOnlineQuadBezier(this->quadBezierAry, this->rmsErrAry , online, sampling);
                     vector<vector<T> > fittedAry; // dum
-                    saveFittedFlowfields(fittedAry, sample_base, sampling, out_path.c_str());
+                    if (!out_path.empty())
+                        saveFittedFlowfields(fittedAry, sample_base, sampling, out_path.c_str());
                     count ++;
                 }
 
@@ -703,13 +713,15 @@ public:
                 sample_base = i;
 
                 // start saving
-                std::string cmd ;
-                if (DIMS==3)
-                    cmd = strprintf("cp %s %s/sampling%d_%02d.vec", fileAry[i].c_str(), out_path.c_str(), sampling, i);
-                else
-                    cmd = strprintf("cp %s %s/sampling%d_%02d.raw", fileAry[i].c_str(), out_path.c_str(), sampling, i);
-                println("%s", cmd.c_str());
-                system(cmd.c_str());
+                if (!out_path.empty()) {
+                    std::string cmd ;
+                    if (DIMS==3)
+                        cmd = strprintf("cp %s %s/sampling%d_%02d.vec", fileAry[i].c_str(), out_path.c_str(), sampling, i);
+                    else
+                        cmd = strprintf("cp %s %s/sampling%d_%02d.raw", fileAry[i].c_str(), out_path.c_str(), sampling, i);
+                    println("%s", cmd.c_str());
+                    system(cmd.c_str());
+                }
 
             }
             reportTime();
@@ -743,7 +755,8 @@ public:
     }
 
     void test_online() {
-        float seq[] = {1, 2, 3, 100, 5, 6, 7, 8, 9, 10};
+        //float seq[] = {1, 2, 3, 100, 5, 6, 7, 8, 9, 10};
+        float seq[] = {1, 4, 9, 100, 25, 36, 49, 64, 81, 100};
         int sampling = 9, n = 10;
         int i;
         vector<vector<T> > fieldAry(n, vector<T>(1));
@@ -771,7 +784,7 @@ public:
     }
 
     void reportTime() {
-        printf("Fit times: %d\n", fitTimes);
+        printf("sampling=%d, threads=%d, Fit times: %d\n", GET_ARG_INT("sampling"), GET_ARG_INT("threads"), fitTimes);
         printf("Average online add time, fit time (ms): %.5lf, %.5lf\n", totalAddTime.getValue()*1e-3/addTimes, totalFitTime.getValue()*1e-3/fitTimes );
     }
 };
