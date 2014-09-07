@@ -1,8 +1,8 @@
 setenv('PATH', '/home/chenchu/Project/flowvis/tools:/home/chenchu/Project/flowvis/4D/tools:/home/chenchu/bin:/usr/lib/lightdm/lightdm:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games')
 
-skipping = 12;
-test = 31;
-RUN_TRACING = 1;
+skipping = 12
+test = 2;
+RUN_TRACING = 0;
 switch test
     case 0
         case_folder = 'diag3dtime';
@@ -135,7 +135,7 @@ mkdir (case_folder)
 
 % gen seeds
 seed_file = sprintf('%s/seeds.txt', case_folder);
-gen_seed(seed_file, seeds_x, seeds_y, seeds_z, 0);
+gen_seed(seed_file, seeds_x, seeds_y, seeds_z, 0, 0);
 % gen_seed(seed_file, 250:20:300, 150:20:200:SEEDING_STEP:H, 50);
 
 %% run 
@@ -343,15 +343,25 @@ for i=1:ntraces
     trace_merged_std = traces_merged_std{i};
     assert(length(trace_merged_std) == n);
     
-    off_merged_err_list(:,:,count+1) = (trace_merged(1:3,:) - trace_true(1:3,:));
+    off_merged_err_list(:,:,count+1) = abs(trace_merged(1:3,:) - trace_true(1:3,:));
     off_merged_std_list(:,:,count+1) = trace_merged_std;
     
     
     count=count+1;
-    
-%     plot_traces({trace_true, trace_dbr_fw_rk4, trace_fw_rk4, trace_bezier, trace_merged})
-%     disp('pause...')
-%     pause
+
+    if 1
+    %     plot_traces({trace_true, trace_dbr_fw_rk4, trace_fw_rk4, trace_bezier, trace_merged})
+        plot_traces({trace_true, trace_merged})
+        hold on
+        for kk=1:5:size(trace_merged,2)
+            if norm(trace_merged_std(2:3,kk))>0
+                error_ellipse(diag(trace_merged_std(2:3,kk)*8*1.96), trace_merged(2:3,kk)', 'style', 'r');
+            end
+        end
+        hold off
+        disp('pause...')
+        pause
+    end
 end
 off_linterp_list = off_linterp_list(:,1:count);
 off_linterp_list2 = off_linterp_list2(:,1:count);
@@ -359,8 +369,13 @@ off_fw_rk4_list = off_fw_rk4_list(:,1:count);
 off_dbr_fw_rk4_list = off_dbr_fw_rk4_list(:,1:count);
 off_bezier_list = off_bezier_list(:,1:count);
 off_merged_list = off_merged_list(:,1:count);
-off_merged_err_list = off_merged_err_list(:,1:count);
-off_merged_std_list = off_merged_std_list(:,1:count);
+off_merged_err_list = off_merged_err_list(:,:,1:count);
+off_merged_std_list = off_merged_std_list(:,:,1:count);
+
+len = size(off_merged_err_list,2)*size(off_merged_err_list,3);
+% plot(reshape(off_merged_std_list(1,:,:),len,1)*s*1.96,  abs(reshape(off_merged_err_list(1,:,:), len,1)), '.')
+off_merged_err_list_reshape = abs(reshape(off_merged_err_list(:,:,:), 3, len));
+off_merged_std_list_reshape = reshape(off_merged_std_list(:,:,:),3, len);
 
 
 mean_off_linterp = mean(mean(off_linterp_list)) 
@@ -373,20 +388,29 @@ disp('[mean_off_linterp; mean_off_linterp2;  mean_off_fw_rk4; mean_off_dbr_fw_rk
 [mean_off_linterp; mean_off_linterp2;  mean_off_fw_rk4; mean_off_dbr_fw_rk4; mean_off_bezier_list; mean_off_merged]
 n=3*count
 s=8
-plot(off_merged_std_list(1,:), abs(off_merged_err_list(1,:)),  '.')
-hist(off_merged_err_list(1,:) ./ off_merged_std_list(1,:) )
-one_times_std = [sum(off_merged_err_list(1,:) <= (off_merged_std_list(1,:)*s)  ) / count
-                 sum(off_merged_err_list(2,:) <= (off_merged_std_list(2,:)*s)  ) / count
-                 sum(off_merged_err_list(3,:) <= (off_merged_std_list(3,:)*s)  ) / count]
-two_times_std = [sum(off_merged_err_list(1,:) <= (off_merged_std_list(1,:)*s*2)  ) / count
-                 sum(off_merged_err_list(2,:) <= (off_merged_std_list(2,:)*s*2)  ) / count
-                 sum(off_merged_err_list(3,:) <= (off_merged_std_list(3,:)*s*2)  ) / count]
-three_times_std = [sum(off_merged_err_list(1,:) <= (off_merged_std_list(1,:)*s*3)  ) / count
-                   sum(off_merged_err_list(2,:) <= (off_merged_std_list(2,:)*s*3)  ) / count
-                   sum(off_merged_err_list(3,:) <= (off_merged_std_list(3,:)*s*3)  ) / count]
-confidence95 = [sum(off_merged_err_list(1,:) <= (off_merged_std_list(1,:)*s*1.96)  ) / count
-                   sum(off_merged_err_list(2,:) <= (off_merged_std_list(2,:)*s*1.96)  ) / count
-                   sum(off_merged_err_list(3,:) <= (off_merged_std_list(3,:)*s*1.96)  ) / count]      
+
+
+figure
+hist(off_merged_err_list_reshape(1,:) ./ off_merged_std_list_reshape(1,:) )
+figure 
+h=hist2d([off_merged_err_list_reshape(1,:)', off_merged_std_list_reshape(1,:)'], ...
+    linspace(0,max(off_merged_err_list_reshape(1,:))/2,50), linspace(0,max(off_merged_std_list_reshape(1,:))/2,50));
+pcolor(log(h))
+% pcolor((h))
+colorbar
+
+one_times_std = [sum(off_merged_err_list_reshape(1,:) <= (off_merged_std_list_reshape(1,:)*s)  ) / len
+                 sum(off_merged_err_list_reshape(2,:) <= (off_merged_std_list_reshape(2,:)*s)  ) / len
+                 sum(off_merged_err_list_reshape(3,:) <= (off_merged_std_list_reshape(3,:)*s)  ) / len]
+two_times_std = [sum(off_merged_err_list_reshape(1,:) <= (off_merged_std_list_reshape(1,:)*s*2)  ) / len
+                 sum(off_merged_err_list_reshape(2,:) <= (off_merged_std_list_reshape(2,:)*s*2)  ) / len
+                 sum(off_merged_err_list_reshape(3,:) <= (off_merged_std_list_reshape(3,:)*s*2)  ) / len]
+three_times_std = [sum(off_merged_err_list_reshape(1,:) <= (off_merged_std_list_reshape(1,:)*s*3)  ) / len
+                   sum(off_merged_err_list_reshape(2,:) <= (off_merged_std_list_reshape(2,:)*s*3)  ) / len
+                   sum(off_merged_err_list_reshape(3,:) <= (off_merged_std_list_reshape(3,:)*s*3)  ) / len]
+confidence95 = [sum(off_merged_err_list_reshape(1,:) <= (off_merged_std_list_reshape(1,:)*s*1.96)  ) / len
+                   sum(off_merged_err_list_reshape(2,:) <= (off_merged_std_list_reshape(2,:)*s*1.96)  ) / len
+                   sum(off_merged_err_list_reshape(3,:) <= (off_merged_std_list_reshape(3,:)*s*1.96)  ) / len]      
 min_confidence95 = min(confidence95)               
 [ntraces count]
 

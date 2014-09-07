@@ -1,7 +1,7 @@
 
 % isabel
-TEST = 7
-SAMPLING=100;
+TEST = 3
+SAMPLING=50;
 TUPLES=3; % default
 switch TEST
     case 0

@@ -793,7 +793,7 @@ public:
 };
 
 int main(int argc, const char **argv) {
-    CmdArgReader::init(argc, argv, "-sampling=4 -list=all.list -2d=0 -errhist=1 -scalar=0 -threads=4");
+    CmdArgReader::init(argc, argv, "-sampling=4 -list=all.list -2d=0 -errhist=1 -scalar=0 -threads=4 -online=1");
 
     omp_set_num_threads(GET_ARG_INT("threads"));
 
@@ -811,17 +811,25 @@ int main(int argc, const char **argv) {
 
     int sampling = GET_ARG_INT("sampling");
 
+    int online = GET_ARG_INT("online");
+
 	//OSUFlow osuflow;
 	//osuflow.LoadData(GET_ARG_STRING("list").c_str(), false); // time-varying
     if (GET_ARG_INT("scalar")) {
         SINGLETON x; //test
         x[0]=1;
         ErrorModeling<SINGLETON, 1> em;
-        em.run_online(sampling);
-        em.reportTime();
+        if (online) {
+            em.run_online(sampling);
+            em.reportTime();
+        } else
+            em.run_offline(sampling);
     } else {
         ErrorModeling<VECTOR3, 3> em;
-        em.run_online(sampling);
-        em.reportTime();
+        if (online) {
+            em.run_online(sampling);
+            em.reportTime();
+        } else
+            em.run_offline(sampling);
     }
 }

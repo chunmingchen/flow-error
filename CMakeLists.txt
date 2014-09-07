@@ -83,8 +83,12 @@ endif()
 add_executable(flow_error flow_error.cpp)
 TARGET_LINK_LIBRARIES(flow_error  ${libOSUFlow} ${libJCLib} m)
 
+
 #add_executable(merge_error merge_error.cpp)
 #TARGET_LINK_LIBRARIES(merge_error ${libOSUFlow} ${libJCLib} m ${VTK_LIBRARIES})
+
+#add_executable(insitu_pathline insitu_pathline.cpp)
+#TARGET_LINK_LIBRARIES(insitu_pathline  ${libOSUFlow} ${libJCLib} m)
 
 #add_executable(cmp_pathline cmp_pathline.cpp)
 #TARGET_LINK_LIBRARIES(cmp_pathline ${libOSUFlow} ${libJCLib} m ${VTK_LIBRARIES})

@@ -14,7 +14,7 @@ yvalues = {   [0.5256	0.6264	0.308	0.3736	0.1088	0.1648
 0.50559	0.57446	0.38368	0.43094	0.2508	0.2683
 0.99306	0.9755	0.93268	0.92052	0.7942	0.7427]
 };
-legends = {{'Linear Interpolation', 'Linear Interp. w/ Double Sampling', 'Quadratic Bezier Spline'}};
+legends = {{'Linear Interpolation', 'Linear Interp. w/ Double Sampling', 'Quadratic Bezier Curve'}};
 xlabels = {'Test Method and Sampling Interval'};
 ylabels = {'Rejection Rate (%)'};
 titles = {'Isabel', 'Plume', 'Climate'};
@@ -34,7 +34,7 @@ for i=1:length(xvalues)
     bar(100-yvalues{i}'*100);
     if i==1
         h = legend(legends{1}, 'Location', 'NorthWest');
-        set(h, 'FontSize', 12.0);
+        set(h, 'FontSize', 20.0);
           set(h,'box','off') 
     end
     set(gca, 'FontSize', 36.0);
