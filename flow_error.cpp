@@ -15,7 +15,7 @@
 #include "thread/ThreadClass.h"
 #include "omp.h"
 using namespace std;
-using namespace JCLib;
+using namespace JCLib; // https://github.com/chunmingchen/JCLib
 
 vector<string> fileAry;
 int W, H, D, Ts;
@@ -23,6 +23,8 @@ int W, H, D, Ts;
 bool saveErrHist=false;
 
 ///////////////////////
+/// \brief The SINGLETON struct
+/// Model for a scalar type
 struct SINGLETON{
     float v;
     SINGLETON() {v=0;}
@@ -740,7 +742,7 @@ public:
 
         if (!out_path.empty()) {
             FILE *fp = fopen(strprintf("%s/all_bezier_rms.list", out_path.c_str()).c_str(), "w");
-            fprintf(fp, "%d %d %d %d\n", W, H, D, count);
+            fprintf(fp, "%d %d %d %d\n", W, H, D, count+1);
             fprintf(fp, "%lg\n", 1.f/(double)sampling);
             for (i=0; i< count ; i++)
             {

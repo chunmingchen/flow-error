@@ -9,12 +9,18 @@ yvalues = {   [16.1315	36.1786	58.4566
 24.8951	63.5604	121.9786
 11.2699	28.8575	60.8385]
 };
-legends = {{'Direct Connect', 'RK4 Tracing Double Sampling', 'Forward-backward Intersecting       '}};
+%legends = {{'Directly Connect', 'RK4 Tracing Double Sampling', 'Forward-backward Intersecting       '}};
+legends = {'Directly Connect', 'Fw-DS', 'Fw-Bw'};
 xlabels = {'Sampling Interval (Time Steps)'};
 ylabels = {'Average Error (Voxels)'};
 titles = {'Isabel', 'Plume', 'Climate'};
-base_path = '~/Dropbox/0osuflow/Paper/LDAV14/fig/matlab';
+base_path = '~/Dropbox/0osuflow/Paper/PacificVis15/fig/matlab';
 
+% swap
+tmp = legends{1}; legends{1}=legends{2}; legends{2}=tmp;
+for i=1:3
+    tmp = yvalues{i}(1,:); yvalues{i}(1,:)=yvalues{i}(2,:); yvalues{i}(2,:)=tmp;
+end
 
 close all
 jet_inv = jet;
@@ -26,8 +32,8 @@ for i=1:length(xvalues)
     
     bar(yvalues{i}');
     if i==1
-         h = legend(legends{1}, 'Location', 'NorthWest');
-         set(h, 'FontSize', 20.0);
+         h = legend(legends, 'Location', 'NorthWest');
+         set(h, 'FontSize', 28.0);
           set(h,'box','off') 
     end
     set(gca, 'FontSize', 36.0);

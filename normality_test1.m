@@ -1,4 +1,8 @@
-function [fit_ratio_ks, fit_ratio_chi, conf_95_ratio, pfield] = normality_test1(err)
+function [fit_ratio_ks, fit_ratio_chi, conf_95_ratio, pfield] = normality_test1(err, dof)
+
+if nargin==1
+    dof=1;
+end
 
 % normality test
 % intput: err = vecAll - vecAll_fit
@@ -7,7 +11,7 @@ pValue_list1 = [];
 H_list2 = [];
 pValue_list2 = [];
 
-div = size(err,5)-1;
+div = size(err,5)-dof;
 conf_95_list = [];
 
 pfield = 2*ones(size(err,1), size(err,2), size(err,3), size(err,4));
@@ -19,7 +23,6 @@ for z=1:size(err,4)
                 err1 = squeeze(err(d,x,y,z,:));
                 s = sqrt(sum(err1.^2)/div); % standard error
                 
-                %conf_95_list(end+1) = mean(err1 < s*1.96); %!!!!!!! paper submit
                 conf_95_list(end+1) = mean(abs(err1) < s*1.96);
                
                 if s<1e-3
@@ -32,6 +35,7 @@ for z=1:size(err,4)
                 [H2, pValue2] = chi2gof(err1, 'CDF', pd);
 %                 [H2, pValue2] = chi2gof(err1);
 
+hist(err1, 20)
                 if ~isnan(pValue1)
 
                     H_list1(end+1) = H1;

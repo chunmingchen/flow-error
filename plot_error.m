@@ -18,7 +18,8 @@ yvalues = {    [3.1381	4.2965	6.9277
 -1.24E-01	-0.21459	-0.3178
 -1.74E-02	-0.037677	-0.054516]
 };
-legends = {{'Linear Interpolation', 'Linear Interp. w/ Dbl. Sampling', 'Quadratic Bezier Spline'}};
+%legends = {{'Linear Interpolation', 'Linear Interp. w/ Dbl. Sampling', 'Quadratic Bezier Fit'}};
+legends = {{'LI', 'LI-DS', 'QB'}};
 xlabels = {'Sampling Interval (Time Steps)'};
 ylabels = {'RMSE', 'RMSE', 'RMSE', 'Mean Error', 'Mean Error', 'Mean Error'};
 titles = {'Isabel', 'Plume', 'Climate', 'Isabel', 'Plume', 'Climate'};
@@ -37,7 +38,7 @@ for i=1:length(xvalues)
     bar(yvalues{i}');
     if i==1
         h = legend(legends{1}, 'Location', 'NorthWest');
-        set(h, 'FontSize', 18.0);
+        set(h, 'FontSize', 28.0);
         set(h, 'box', 'off');
     end
     set(gca, 'FontSize', 36.0);

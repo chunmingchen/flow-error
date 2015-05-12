@@ -1,8 +1,9 @@
 setenv('PATH', '/home/chenchu/Project/flowvis/tools:/home/chenchu/Project/flowvis/4D/tools:/home/chenchu/bin:/usr/lib/lightdm/lightdm:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games')
 
-skipping = 12
-test = 2;
+skipping = 47
+test = 1;
 RUN_TRACING = 0;
+out_base_path = '~/Dropbox/0osuflow/Paper/LDAV14/fig/matlab';
 switch test
     case 0
         case_folder = 'diag3dtime';
@@ -59,13 +60,14 @@ switch test
         scale=1;
     case 2
         label = 'plume'
-        base_path = '/data/flow2/plume126_all';
+        %base_path = '/data/flow2/plume126_all';
+        base_path = '/data/flow2/plume252_all';
         true_list_file = sprintf('%s/all.list', base_path);
         fitted_list_file = sprintf('%s/fitted/fitted%d/all_bezier_rms.list', base_path, skipping);
         dbr_list_file = sprintf('%s/all_%d.list', base_path, ceil(skipping/2));
 
         [files, W, H, D, T, scaling] = load_list(true_list_file);
-        SEEDING_STEP=13; % 7200 seeds
+        SEEDING_STEP=20; % 8619 seeds
         seeds_x = SEEDING_STEP/2:SEEDING_STEP:W;
         seeds_y = SEEDING_STEP/2:SEEDING_STEP:H;
         seeds_z = SEEDING_STEP/2:SEEDING_STEP:D;
@@ -199,7 +201,7 @@ if RUN_TRACING
     system(cmd);
 end
 
-% regular forward double sampling rate
+%regular forward double sampling rate
 traces_dbr_fw_rk4_file = sprintf('%s/pathlines.dbr.fw.rk4.out', case_folder); 
 if RUN_TRACING & 1
     delete(traces_dbr_fw_rk4_file);
@@ -210,7 +212,7 @@ end
 
 % for demo purpose
 out_file = sprintf('%s/pathlines.rk4.out', case_folder); 
-if RUN_TRACING & 0
+if RUN_TRACING & 1
     delete(out_file);
     cmd = sprintf('parallelPathline_omp %s -loader=bezier -saver=2 -limit=3 -omp_nproc=7 -stepsize=%.7f -seedfile=%s -out=%s -scale=%f' , ...
         fitted_list_file, STEP_SIZE, seed_file, out_file, skipping*scale)
@@ -220,7 +222,7 @@ end
 
 % regular stochastic
 out_file = sprintf('%s/pathlines.ufw.out', case_folder)
-if RUN_TRACING & 0
+if RUN_TRACING & 1
     delete(out_file)
     cmd = sprintf('parallelPathline_omp %s -loader=bezier_random -saver=2 -limit=3 -omp_nproc=7 -stepsize=%.7f -seedfile=%s -out=%s -seedclone=100 -steps=1 -scale=%f' , ...
         fitted_list_file, STEP_SIZE, seeds_fw_file, out_file, skipping*scale)
@@ -263,6 +265,8 @@ end
 [traces_merged, traces_merged_std] = load_pathlines(traces_merged_file);
 traces_fw_rk4 = load_pathlines(traces_fw_rk4_file);
 traces_dbr_fw_rk4 = load_pathlines(traces_dbr_fw_rk4_file);
+[traces_bw, traces_bw_std] = load_pathlines(traces_bw_file);
+[traces_fw, traces_fw_std] = load_pathlines(traces_fw_file);
 ntraces = length(traces_true_seg);
 % out
 off_linterp_list = zeros(skipping*8+1, ntraces);
@@ -273,11 +277,15 @@ off_bezier_list = zeros(skipping*8+1, ntraces);
 off_merged_list = zeros(skipping*8+1, ntraces);
 off_merged_err_list = zeros(3, skipping*8+1, ntraces);
 off_merged_std_list = zeros(3, skipping*8+1, ntraces);
+curvature_true = zeros(skipping*8+1, ntraces);
 count=0;
 for i=1:ntraces
     trace_true = traces_true_seg{i};
     t_ary = trace_true(4,:);
     n= length(t_ary);
+    
+    % compute curvature for each point
+    %curvature(:, count+1) = compute_trace_curvature(trace_true);    
     
     % linterp
     t2 = [trace_true(4,1) trace_true(4,end)];
@@ -349,17 +357,51 @@ for i=1:ntraces
     
     count=count+1;
 
-    if 1
-    %     plot_traces({trace_true, trace_dbr_fw_rk4, trace_fw_rk4, trace_bezier, trace_merged})
-        plot_traces({trace_true, trace_merged})
-        hold on
-        for kk=1:5:size(trace_merged,2)
-            if norm(trace_merged_std(2:3,kk))>0
-                error_ellipse(diag(trace_merged_std(2:3,kk)*8*1.96), trace_merged(2:3,kk)', 'style', 'r');
+    if 0
+        trace_bw = traces_bw{i};
+        if length(trace_bw) < n
+            continue;
+        end
+        trace_bw_std = traces_bw_std{i};
+        
+        trace_fw = traces_fw{i};
+        if length(trace_fw) < n
+            continue;
+        end
+        trace_fw_std = traces_fw_std{i};
+                
+        %plot_traces({trace_true, trace_dbr_fw_rk4, trace_fw_rk4, trace_bezier, trace_merged})
+        plot(1:2,1:2, 'b--', 1:2,1:2,'r', 1:2,1:2, 'k--', 'LineWidth', 3);
+        legend('Forward/backward trace', 'Intersected trace', 'Ground truth', 'Location', 'Northwest')
+        legend('boxoff')
+        hold all
+        plot_traces({trace_merged, trace_fw, trace_bw, trace_true}, {'r', 'b--', 'b--', 'k--'})
+        hold on            
+        for kk=2:n/10:n-1
+            kk=floor(kk);
+            r = 1.96;
+            if norm(trace_merged_std(1:2,kk))>0
+                error_ellipse(diag(trace_merged_std(1:2,kk)*1.96).^2, trace_merged(1:2,kk)', 'style', 'r');
+            end
+            if norm(trace_fw_std(1:2,kk))>0
+                error_ellipse(diag(trace_fw_std(1:2,kk)*r).^2, trace_fw(1:2,kk)', 'style', 'b');
+            end
+            jj=n+1-kk;
+            if norm(trace_bw_std(1:2,jj))>0
+                error_ellipse(diag(trace_bw_std(1:2,jj)*r).^2, trace_bw(1:2,jj)', 'style', 'b');
             end
         end
+        xlabel('X')
+        ylabel('Y')
+        xlim([20 115])
+        ylim([110 155])
+        set(gca, 'XTick', []);
+        set(gca, 'YTick', []);
+        set(gca, 'FontSize', 30.0);  
         hold off
         disp('pause...')
+        % i=119 isabel
+        %saveas(gca, sprintf('%s/%s119.eps', out_base_path, label), 'psc2');
         pause
     end
 end
@@ -390,14 +432,24 @@ n=3*count
 s=8
 
 
-figure
-hist(off_merged_err_list_reshape(1,:) ./ off_merged_std_list_reshape(1,:) )
+% figure
+% hist(off_merged_err_list_reshape(1,:) ./ off_merged_std_list_reshape(1,:) )
 figure 
+mycolormap
 h=hist2d([off_merged_err_list_reshape(1,:)', off_merged_std_list_reshape(1,:)'], ...
-    linspace(0,max(off_merged_err_list_reshape(1,:))/2,50), linspace(0,max(off_merged_std_list_reshape(1,:))/2,50));
-pcolor(log(h))
+    linspace(0,max(off_merged_err_list_reshape(1,:))/3,50), linspace(0,max(off_merged_std_list_reshape(1,:))/3,50));
+% pcolor(log(h))
 % pcolor((h))
+imagesc(h); set(gca,'YDir','normal')
+set(gca, 'xticklabel', sprintf('%.2f|', linspace(0,max(off_merged_std_list_reshape(1,:))/3,50)))
+set(gca, 'yticklabel', sprintf('%.1f|', linspace(0,max(off_merged_err_list_reshape(1,:))/3,50)))
+xlabel('Estimated Error STD')
+ylabel('Actual Error')
 colorbar
+
+figure
+
+
 
 one_times_std = [sum(off_merged_err_list_reshape(1,:) <= (off_merged_std_list_reshape(1,:)*s)  ) / len
                  sum(off_merged_err_list_reshape(2,:) <= (off_merged_std_list_reshape(2,:)*s)  ) / len

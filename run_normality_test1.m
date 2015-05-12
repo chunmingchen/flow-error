@@ -1,7 +1,7 @@
 
 % isabel
-TEST = 7
-SAMPLING=99;
+TEST = 3
+SAMPLING=100;
 TUPLES=3; % default
 switch TEST
     case 0
@@ -121,7 +121,7 @@ sample_t = SAMPLING+1
 disp(sprintf('press a key... total points=%d *%d=%d', sample_w*sample_h*sample_d, TUPLES, sample_w*sample_h*sample_d*TUPLES))
 pause
 % get fields
-if 1
+if 0
     [true_list, data_w, data_h, data_d, data_t, scaling] = load_list(true_list_file);
     
     vecAll      = zeros(TUPLES, sample_w, sample_h, sample_d, sample_t);
@@ -211,15 +211,16 @@ if 1
 %     
     disp('Running fit test')
     
+%     [ks_bezier_search, chi_bezier_search, conf_ratio_bezier_search, pfield_bezier_search, err_rms_bezier_search] = normality_search(vecAll);
     [ks_bezier, chi_bezier, conf_ratio_bezier, pfield_bezier] = normality_test1(vecAll_bezier - vecAll)   ; 
 %     [ks_bezier, chi_bezier, conf_ratio_bezier]
-    [ks_bezier3, chi_bezier3, conf_ratio_bezier3, pfield_bezier3] = normality_test1(vecAll_bezier3 - vecAll)   ; 
-    [ks_bezier4, chi_bezier4, conf_ratio_bezier4, pfield_bezier4] = normality_test1(vecAll_bezier4 - vecAll)   ; 
+    [ks_bezier3, chi_bezier3, conf_ratio_bezier3, pfield_bezier3] = normality_test1(vecAll_bezier3 - vecAll, 2)   ; 
+    [ks_bezier4, chi_bezier4, conf_ratio_bezier4, pfield_bezier4] = normality_test1(vecAll_bezier4 - vecAll, 3)   ; 
     %dump_scalar(squeeze(pfield(1,:,:,:,:)) , sprintf('%s_%d/kstest_field.raw', label, SAMPLING));
-    [ks_linear, chi_linear] = normality_test1(vecAll_linear - vecAll)
-    [ks_linear2, chi_linear2] = normality_test1(vecAll_linear2 - vecAll)
-    [ks_fitn1, chi_fitn1, conf_ratio_fitn1, pfield_fitn1] = normality_test1(vecAll_fitn1 - vecAll)
-    [ks_fitn2, chi_fitn2, conf_ratio_fitn2, pfield_fitn2] = normality_test1(vecAll_fitn2 - vecAll)
+%     [ks_linear, chi_linear] = normality_test1(vecAll_linear - vecAll)
+%     [ks_linear2, chi_linear2] = normality_test1(vecAll_linear2 - vecAll)
+%     [ks_fitn1, chi_fitn1, conf_ratio_fitn1, pfield_fitn1] = normality_test1(vecAll_fitn1 - vecAll, 2)
+%     [ks_fitn2, chi_fitn2, conf_ratio_fitn2, pfield_fitn2] = normality_test1(vecAll_fitn2 - vecAll, 3)
 end
 err_rms = [err_rms_linear; err_rms_linear2; err_rms_bezier; err_rms_bezier3; err_rms_bezier4; err_rms_fitn1; err_rms_fitn2]
 err_mean = [err_mean_linear; err_mean_linear2; err_mean_bezier; err_mean_bezier3; err_mean_bezier4; err_mean_fitn1; err_mean_fitn2]

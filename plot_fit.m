@@ -14,11 +14,12 @@ yvalues = {   [0.5256	0.6264	0.308	0.3736	0.1088	0.1648
 0.50559	0.57446	0.38368	0.43094	0.2508	0.2683
 0.99306	0.9755	0.93268	0.92052	0.7942	0.7427]
 };
-legends = {{'Linear Interpolation', 'Linear Interp. w/ Double Sampling', 'Quadratic Bezier Curve'}};
-xlabels = {'Test Method and Sampling Interval'};
+%legends = {{'Linear Interpolation', 'Linear Interp. w/ Double Sampling', 'Quadratic Bezier Fit'}};
+legends = {{'LI', 'LI-DS', 'QB'}};
+xlabels = {'Test Method/Sampling Interval'};
 ylabels = {'Rejection Rate (%)'};
 titles = {'Isabel', 'Plume', 'Climate'};
-base_path = '~/Dropbox/0osuflow/Paper/LDAV14/fig/matlab';
+base_path = '~/Dropbox/0osuflow/Paper/PacificVis15/fig/matlab';
 
 
 close all
@@ -34,7 +35,7 @@ for i=1:length(xvalues)
     bar(100-yvalues{i}'*100);
     if i==1
         h = legend(legends{1}, 'Location', 'NorthWest');
-        set(h, 'FontSize', 20.0);
+        set(h, 'FontSize', 28.0);
           set(h,'box','off') 
     end
     set(gca, 'FontSize', 36.0);
@@ -51,7 +52,7 @@ for i=1:length(xvalues)
 %     set(gca,'XTick', 1:length(xvalues{i}))
 %     set(gca,'XTickLabel',xvalues{i})
     my_xticklabels(gca, 1:length(xvalues{i}), xvalues{i})
-    saveas(gca, sprintf('%s/%s_%s.eps', base_path, 'Test', titles{i}), 'psc2');
+%     saveas(gca, sprintf('%s/%s_%s.eps', base_path, 'Test', titles{i}), 'psc2');
     
 end
 

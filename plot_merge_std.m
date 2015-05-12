@@ -27,7 +27,7 @@ for i=1:length(xvalues)
     bar(100*yvalues{i}');
     if i==1
          h = legend(legends{1}, 'Location', 'SouthEast');
-         set(h, 'FontSize', 20.0);
+         set(h, 'FontSize', 24.0);
 %           set(h,'box','off') 
     end
     set(gca, 'FontSize', 36.0);
@@ -69,7 +69,7 @@ for i=1:length(xvalues)
     bar(100*yvalues{i}');
     if i==1
          h = legend(legends{1}, 'Location', 'SouthEast');
-         set(h, 'FontSize', 20.0);
+         set(h, 'FontSize', 24.0);
 %           set(h,'box','off') 
     end
     set(gca, 'FontSize', 36.0);
