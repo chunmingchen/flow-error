@@ -356,7 +356,7 @@ class ErrorModeling{
         println("Saving fitted flow fields...");
         int i;
         FILE *fp;
-#if 0 // store each timestep
+#if 1 // store each timestep
         int skip = 1;
         vector<T> flowfield(W*H*D);
         for (i=0; i<=sampling; i+=skip)
@@ -671,7 +671,7 @@ public:
 
 
 
-        string out_path = GET_ARG_STRING("out_path", "");
+        string out_path = GET_ARG_STRING("out_path");
         int count = 0;
         int sample_base = 0;
     #if 1
@@ -795,7 +795,7 @@ public:
 };
 
 int main(int argc, const char **argv) {
-    CmdArgReader::init(argc, argv, "-sampling=4 -list=all.list -2d=0 -errhist=1 -scalar=0 -threads=4 -online=1");
+    CmdArgReader::init(argc, argv, "-sampling=4 -list=all.list -2d=0 -errhist=1 -scalar=0 -threads=4 -online=1 -out_path=");
 
     omp_set_num_threads(GET_ARG_INT("threads"));
 

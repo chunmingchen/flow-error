@@ -40,6 +40,8 @@ ENDIF()
 
 
 # automatic settings
+SET(libOSUFlow  optimized OSUFlow     debug OSUFlow_d)
+SET(libJCLib    optimized jclib     debug jclib)
 
 
 # directories
@@ -47,7 +49,7 @@ INCLUDE_DIRECTORIES(
     ${osuflow_dir}/include/osuflow       # for make install
     ${osuflow_dir}/include/osuflow/renderer
     ${osuflow_dir}/include/osuflow/renderer/gcb
-    ${lib_dir}/jclib
+    ${lib_dir}
     ${flowvis_dir}/common
     )
 
@@ -61,9 +63,6 @@ LINK_DIRECTORIES(
     ${osuflow_dir}/lib/osuflow/renderer/gcb
     ${lib_dir}
     )
-
-SET(libOSUFlow  optimized OSUFlow     debug OSUFlow_d)
-SET(libJCLib    optimized jclib     debug jclibd)
 
 # profiling
 
