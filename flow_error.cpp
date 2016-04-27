@@ -14,6 +14,7 @@
 #include "cp_time.h"
 #include "thread/ThreadClass.h"
 #include "omp.h"
+#include "online_quad_bezier_fit.h"
 using namespace std;
 using namespace JCLib; // https://github.com/chunmingchen/JCLib
 
@@ -22,6 +23,7 @@ int W, H, D, Ts;
 #define POS_ID(x,y,z) ((x)+W*((y)+H*(z)));
 bool saveErrHist=false;
 
+#if 0
 ///////////////////////
 /// \brief The SINGLETON struct
 /// Model for a scalar type
@@ -36,12 +38,6 @@ struct SINGLETON{
     inline SINGLETON operator*(double f)  { SINGLETON y; y.v = v*f; return y; }
     inline SINGLETON &operator+=(const SINGLETON &x)  { v += x.v; return *this; }
 };
-
-inline VECTOR3 &operator +=(VECTOR3 & v0, const VECTOR3 & v1)
-{
-    v0[0]+=v1[0]; v0[1]+=v1[1]; v0[2]+=v1[2];
-    return v0;
-}
 inline VECTOR3 mult(const VECTOR3 & v0, const VECTOR3 & v1)
 {
     VECTOR3 y(v0[0]*v1[0], v0[1]*v1[1], v0[2]*v1[2]); return y;
@@ -50,13 +46,25 @@ inline SINGLETON mult(const SINGLETON & v0, const SINGLETON & v1)
 {
     SINGLETON y; y.v = v0.v * v1.v; return y;
 }
-inline VECTOR3 sqrt(const VECTOR3 &x)
-{
-    VECTOR3 y(sqrt(x[0]), sqrt(x[1]), sqrt(x[2]));
-}
 inline SINGLETON sqrt(const SINGLETON x)
 {
     SINGLETON y; y.v = sqrt(x.v); return y;
+}
+#endif
+
+inline VECTOR3 &operator +=(VECTOR3 & v0, const VECTOR3 & v1)
+{
+    v0[0]+=v1[0]; v0[1]+=v1[1]; v0[2]+=v1[2];
+    return v0;
+}
+
+inline VECTOR3 operator*(const VECTOR3 & v0, const VECTOR3 & v1)
+{
+    VECTOR3 y(v0[0]*v1[0], v0[1]*v1[1], v0[2]*v1[2]); return y;
+}
+inline VECTOR3 sqrt(const VECTOR3 &x)
+{
+    VECTOR3 y(sqrt(x[0]), sqrt(x[1]), sqrt(x[2]));
 }
 
 
@@ -102,6 +110,125 @@ class ErrorModeling{
     // online timing
     AtomicLong totalAddTime, totalFitTime;
     int addTimes, fitTimes;
+
+    void run_online(int sampling) {
+        fitTimes = 0;  addTimes = 0;
+
+        int i, j, z;
+        OnlineCache online;
+
+        int size = W*H*D;
+        println("sampling=%d", sampling);
+        vector<T> flowfield(size);
+        initOnlineQuadBezier(online, size);
+        // output
+        this->quadBezierAry = vector<T>(size);
+        this->rmsErrAry = vector<T>(size);
+
+
+
+        string out_path = GET_ARG_STRING("out_path");
+        int count = 0;
+        int sample_base = 0;
+    #if 1
+        // the simulation loop
+        initOnlineQuadBezier(online, size);
+        for (i = 0; i < Ts; i ++)
+        {
+
+            // start file reading
+            {
+                println("Opening %s", fileAry[i].c_str());
+                FILE *fp = fopen(fileAry[i].c_str(), "rb");
+                if (!fp) {
+                    perror("load flow field");
+                    exit(1);
+                }
+                if (getFileExtension( fileAry[i] )=="vec") {
+                    // skip first 3 integers
+                    fseek(fp, 12, SEEK_SET);
+                }
+
+                printf("Reading data...");
+                fread(&flowfield[0], sizeof(T), W * H * D, fp);
+                printf("Done\n");
+
+                fclose(fp);
+            }
+
+
+            Timer timer;
+            timer.start();
+
+            addOnlineQuadBezier(online, flowfield, (i-sample_base)/(float)sampling);
+
+            totalAddTime+=timer.getElapsedUS();
+            addTimes++;
+
+            if (i%sampling==0) {
+                if (i>0) {
+
+                    Timer timer;
+                    timer.start();
+
+                    fitOnlineQuadBezier(this->quadBezierAry, this->rmsErrAry , online, sampling);
+
+                    timer.end();
+                    totalFitTime+=timer.getElapsedUS();
+                    fitTimes++;
+
+                    vector<vector<T> > fittedAry; // dum
+                    if (!out_path.empty())
+                        saveFittedFlowfields(fittedAry, sample_base, sampling, out_path.c_str());
+                    count ++;
+                }
+
+                initOnlineQuadBezier(online, size);
+                sample_base = i;
+
+                // start saving
+                if (!out_path.empty()) {
+                    std::string cmd ;
+                    if (DIMS==3)
+                        cmd = strprintf("cp %s %s/sampling%d_%02d.vec", fileAry[i].c_str(), out_path.c_str(), sampling, i);
+                    else
+                        cmd = strprintf("cp %s %s/sampling%d_%02d.raw", fileAry[i].c_str(), out_path.c_str(), sampling, i);
+                    println("%s", cmd.c_str());
+                    system(cmd.c_str());
+                }
+
+            }
+            reportTime();
+        }
+    #else
+        for (i = 0; i < Ts; i += sampling)
+        {
+            if (i+sampling >= Ts) {
+                break;
+            }
+            count ++;
+        }
+
+    #endif
+
+        if (!out_path.empty()) {
+            FILE *fp = fopen(strprintf("%s/all_bezier_rms.list", out_path.c_str()).c_str(), "w");
+            fprintf(fp, "%d %d %d %d\n", W, H, D, count+1);
+            fprintf(fp, "%lg\n", 1.f/(double)sampling);
+            for (i=0; i< count ; i++)
+            {
+                fprintf(fp, "sampling%d_%02d.vec sampling%d_%02d_bctrl.raw sampling%d_%02d_rmserr.raw\n",
+                    sampling, sampling*i, sampling, sampling*i, sampling, sampling*i);
+
+                int i1 = i+1;
+                if (i==count-1)
+                    fprintf(fp, "sampling%d_%02d.vec sampling%d_%02d_bctrl.raw sampling%d_%02d_rmserr.raw\n",
+                        sampling, sampling*i1, sampling, sampling*i, sampling, sampling*i);
+
+            }
+            fclose(fp);
+        }
+    }
 
     // fitting with quad with connected end points
     void fitQuadFuncEndPoints(vector<vector<T> > &flowfieldAry, int start, int sampling)
@@ -554,15 +681,6 @@ public:
         vector<T> y1;
     };
 
-    void initOnlineQuadBezier(OnlineCache &online, int size) {
-        online.ysum = vector<T>(size);    memset(&online.ysum[0], 0, size*sizeof(T));
-        online.ytsum = vector<T>(size);   memset(&online.ytsum[0], 0, size*sizeof(T));
-        online.yt2sum = vector<T>(size);  memset(&online.yt2sum[0], 0, size*sizeof(T));
-        online.y2sum = vector<T>(size);   memset(&online.y2sum[0], 0, size*sizeof(T));
-        online.y0 = vector<T>(size);   memset(&online.y0[0], 0, size*sizeof(T));
-        online.y1 = vector<T>(size);   memset(&online.y1[0], 0, size*sizeof(T));
-    }
-
     void addOnlineQuadBezier(OnlineCache &online, vector<T> flowfield, float t)
     {
         assert(flowfield.size() == online.ysum.size());
@@ -654,109 +772,14 @@ public:
         fitTimes++;
     }
 
-
-    void run_online(int sampling) {
-        fitTimes = 0;  addTimes = 0;
-
-        int i, j, z;
-        OnlineCache online;
-
-        int size = W*H*D;
-        println("sampling=%d", sampling);
-        vector<T> flowfield(size);
-        initOnlineQuadBezier(online, size);
-        // output
-        this->quadBezierAry = vector<T>(size);
-        this->rmsErrAry = vector<T>(size);
-
-
-
-        string out_path = GET_ARG_STRING("out_path");
-        int count = 0;
-        int sample_base = 0;
-    #if 1
-        // the simulation loop
-        initOnlineQuadBezier(online, size);
-        for (i = 0; i < Ts; i ++)
-        {
-
-            // start file reading
-            {
-                println("Opening %s", fileAry[i].c_str());
-                FILE *fp = fopen(fileAry[i].c_str(), "rb");
-                if (!fp) {
-                    perror("load flow field");
-                    exit(1);
-                }
-                if (getFileExtension( fileAry[i] )=="vec") {
-                    // skip first 3 integers
-                    fseek(fp, 12, SEEK_SET);
-                }
-
-                printf("Reading data...");
-                fread(&flowfield[0], sizeof(T), W * H * D, fp);
-                printf("Done\n");
-
-                fclose(fp);
-            }
-
-
-            addOnlineQuadBezier(online, flowfield, (i-sample_base)/(float)sampling);
-
-            if (i%sampling==0) {
-                if (i>0) {
-                    fitOnlineQuadBezier(this->quadBezierAry, this->rmsErrAry , online, sampling);
-                    vector<vector<T> > fittedAry; // dum
-                    if (!out_path.empty())
-                        saveFittedFlowfields(fittedAry, sample_base, sampling, out_path.c_str());
-                    count ++;
-                }
-
-                initOnlineQuadBezier(online, size);
-                sample_base = i;
-
-                // start saving
-                if (!out_path.empty()) {
-                    std::string cmd ;
-                    if (DIMS==3)
-                        cmd = strprintf("cp %s %s/sampling%d_%02d.vec", fileAry[i].c_str(), out_path.c_str(), sampling, i);
-                    else
-                        cmd = strprintf("cp %s %s/sampling%d_%02d.raw", fileAry[i].c_str(), out_path.c_str(), sampling, i);
-                    println("%s", cmd.c_str());
-                    system(cmd.c_str());
-                }
-
-            }
-            reportTime();
-        }
-    #else
-        for (i = 0; i < Ts; i += sampling)
-        {
-            if (i+sampling >= Ts) {
-                break;
-            }
-            count ++;
-        }
-
-    #endif
-
-        if (!out_path.empty()) {
-            FILE *fp = fopen(strprintf("%s/all_bezier_rms.list", out_path.c_str()).c_str(), "w");
-            fprintf(fp, "%d %d %d %d\n", W, H, D, count+1);
-            fprintf(fp, "%lg\n", 1.f/(double)sampling);
-            for (i=0; i< count ; i++)
-            {
-                fprintf(fp, "sampling%d_%02d.vec sampling%d_%02d_bctrl.raw sampling%d_%02d_rmserr.raw\n",
-                    sampling, sampling*i, sampling, sampling*i, sampling, sampling*i);
-
-                int i1 = i+1;
-                if (i==count-1)
-                    fprintf(fp, "sampling%d_%02d.vec sampling%d_%02d_bctrl.raw sampling%d_%02d_rmserr.raw\n",
-                        sampling, sampling*i1, sampling, sampling*i, sampling, sampling*i);
-
-            }
-            fclose(fp);
-        }
+#if 0
+    void initOnlineQuadBezier(OnlineCache &online, int size) {
+        online.ysum = vector<T>(size);    memset(&online.ysum[0], 0, size*sizeof(T));
+        online.ytsum = vector<T>(size);   memset(&online.ytsum[0], 0, size*sizeof(T));
+        online.yt2sum = vector<T>(size);  memset(&online.yt2sum[0], 0, size*sizeof(T));
+        online.y2sum = vector<T>(size);   memset(&online.y2sum[0], 0, size*sizeof(T));
+        online.y0 = vector<T>(size);   memset(&online.y0[0], 0, size*sizeof(T));
+        online.y1 = vector<T>(size);   memset(&online.y1[0], 0, size*sizeof(T));
     }
 
     void test_online() {
@@ -780,13 +803,16 @@ public:
             addOnlineQuadBezier(online, fieldAry[i], (float)i/sampling);
         }
 
+        // test online version
         fitOnlineQuadBezier(quadBezierAry, rmsErrAry, online, sampling);
         printf("online:  Ctrl=%f, stderr=%f\n",  quadBezierAry[0][0], rmsErrAry[0][0]);
 
+        // test offline version
         fitQuadBezier(fieldAry, 0, sampling);
         printf("offline: Ctrl=%f, stderr=%f\n", quadBezierAry[0][0], rmsErrAry[0][0]);
 
     }
+#endif
 
     void reportTime() {
         printf("sampling=%d, threads=%d, Fit times: %d\n", GET_ARG_INT("sampling"), GET_ARG_INT("threads"), fitTimes);
@@ -807,20 +833,18 @@ int main(int argc, const char **argv) {
     }
 #endif
 
-	saveErrHist = GET_ARG_INT("errhist");
+    saveErrHist = GET_ARG_INT("errhist");
 
-	load_list(GET_ARG_STRING("list"));
+    load_list(GET_ARG_STRING("list"));
 
     int sampling = GET_ARG_INT("sampling");
 
     int online = GET_ARG_INT("online");
 
-	//OSUFlow osuflow;
-	//osuflow.LoadData(GET_ARG_STRING("list").c_str(), false); // time-varying
+    //OSUFlow osuflow;
+    //osuflow.LoadData(GET_ARG_STRING("list").c_str(), false); // time-varying
     if (GET_ARG_INT("scalar")) {
-        SINGLETON x; //test
-        x[0]=1;
-        ErrorModeling<SINGLETON, 1> em;
+        ErrorModeling<float, 1> em;
         if (online) {
             em.run_online(sampling);
             em.reportTime();
