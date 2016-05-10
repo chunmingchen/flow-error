@@ -49,7 +49,8 @@ template<class T, int DIMS>
 class ErrorModeling{
 
 public:
-    void test_online() {
+    void test_online()
+    {
         //float seq[] = {1, 2, 3, 100, 5, 6, 7, 8, 9, 10};
         float seq[] = {1, 8, 27, 100, 125, 196, 343, 512, 729, 1111};
         //float seq[] = {1, 4, 9, 16, 25, 36, 49, 64, 81, 100};
@@ -116,6 +117,7 @@ private:  // only for offline:
     vector<T> quadBezierAry; // control point
     vector<T> y0Ary, ynAry;
 
+    // offline version for comparison
     // flowfieldAry: one layer of the original vector data
     // z: the z of the layer
     // start: file id

@@ -35,7 +35,7 @@ public:
 
 };
 
-// input: online data info , sequence length
+// input: online data info , sequence length (n)
 // output : ctrlAry, stderrAry
 template <typename T>
 void fitOnlineQuadBezier(vector<T> &ctrlAry, vector<T> &stderrAry, vector<OnlineQuadBezierFit<T> > &onlineAry, int n)
