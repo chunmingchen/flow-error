@@ -14,9 +14,13 @@ public:
     : ysum(0), ytsum(0), yt2sum(0), y2sum(0), y0(0), y1(0)
   {}
 
+  void reset() {
+      ysum = ytsum = yt2sum = y2sum = y0 = y1 = 0;
+  }
+
   // t: in range [0..1].  0: first value, 1: last value
   // y: input data value at t
-  void addData(T y, double t)
+  void addData(const T& y, double t)
   {
     T yt = y*t;
     ysum += y;

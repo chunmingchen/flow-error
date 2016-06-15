@@ -85,6 +85,9 @@ endif()
 add_executable(flow_error_test flow_error_test.cpp)
 TARGET_LINK_LIBRARIES(flow_error_test ${libOSUFlow} ${libJCLib} m)
 
+add_executable(flow_error_online flow_error_online.cpp)
+TARGET_LINK_LIBRARIES(flow_error_online ${libOSUFlow} ${libJCLib} m)
+
 add_executable(merge_error merge_error.cpp)
 TARGET_LINK_LIBRARIES(merge_error ${libOSUFlow} ${libJCLib} m ${VTK_LIBRARIES})
 
